@@ -17,6 +17,27 @@
             flex-direction: column;
             height: 100vh; /* Full viewport height */
             overflow: hidden; /* Prevent body scroll, content will scroll if needed */
+            position: relative; /* Needed for absolute positioning of top-corner elements */
+        }
+
+        /* Top-Corner Elements */
+        .top-left-logo {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 50px; /* Adjust size as needed */
+            height: auto;
+            z-index: 100; /* Ensure it's on top */
+            border-radius: 5px; /* Optional: rounded corners for the image */
+        }
+
+        .top-right-version {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.8em;
+            color: #90a0c0;
+            z-index: 100; /* Ensure it's on top */
         }
 
         /* Main Container for the entire dashboard */
@@ -26,6 +47,8 @@
             flex-grow: 1;
             padding: 10px;
             gap: 10px; /* Space between top and bottom sections */
+            /* Add padding to prevent content from being hidden by top-corner elements */
+            padding-top: 60px; /* Adjust based on logo/version height + desired spacing */
         }
 
         /* Top Section Layout - Adjusted to accommodate 3 columns */
@@ -98,6 +121,10 @@
             position: sticky; /* Sticky headers for scrolling */
             top: 0;
             z-index: 1;
+        }
+
+        .data-table tr {
+            cursor: pointer; /* Indicate rows are clickable/selectable */
         }
 
         .data-table tr:hover {
@@ -356,11 +383,41 @@
             background: #505070;
         }
 
+        /* Custom Context Menu Styling */
+        #customContextMenu {
+            display: none; /* Hidden by default */
+            position: absolute;
+            background-color: #3a3a7a; /* Darker background for menu */
+            border: 1px solid #4a4a8a;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            z-index: 1000; /* Ensure it's on top of everything */
+            padding: 5px 0;
+            min-width: 180px;
+        }
+
+        #customContextMenu .menu-item {
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 0.9em;
+            color: #e0e0e0;
+        }
+
+        #customContextMenu .menu-item:hover {
+            background-color: #4a4a8a; /* Hover effect for menu items */
+        }
+
     </style>
 </head>
 <body>
+    <!-- Top-Corner Elements -->
+    <img src="https://media.discordapp.net/attachments/1228141326965411920/1320980715629711381/ca7eeba99227fd35efd8e37416a1680b_1.png?ex=686809e9&is=6866b869&hm=641822dd533a74995556d7f9dc2c6bd76ea3b78266177957ddda38b68cc57f56&=&format=webp&quality=lossless" alt="Logo" class="top-left-logo">
+    <span class="top-right-version">0.0.5V</span>
+
     <div class="dashboard-container">
+        <!-- Top Section -->
         <div class="top-section">
+            <!-- Left Panel: Active Calls -->
             <div class="top-panel-left">
                 <div class="panel-header">
                     <span>ACTIVE CALLS (<span id="activeCallsCount">0</span>)</span>
@@ -380,30 +437,38 @@
                             </tr>
                         </thead>
                         <tbody id="activeCallsTableBody">
-                            </tbody>
+                            <!-- Active calls will be added here by JavaScript -->
+                        </tbody>
                     </table>
                 </div>
             </div>
 
+            <!-- Middle Panel: Active Units -->
             <div class="top-panel-middle">
                 <div class="panel-header">
                     <span>ACTIVE UNITS</span>
                 </div>
                 <div class="panel-content unit-list" id="activeUnitsList">
-                    </div>
+                    <!-- Active units will be added here by JavaScript or initial data -->
+                </div>
             </div>
 
+            <!-- Right Panel: Active BOLOs -->
             <div class="top-panel-right">
                 <div class="panel-header">
                     <span>ACTIVE BOLOS (<span id="activeBolosCount">0</span>)</span>
                 </div>
                 <div class="panel-content bolo-list" id="activeBolosList">
-                    </div>
+                    <!-- Active BOLOs will be added here by JavaScript -->
+                </div>
             </div>
         </div>
 
+        <!-- Bottom Section (Yellow Border) -->
         <div class="bottom-section">
+            <!-- Left Panel: Forms for New Call, Unit Status Update, New BOLO -->
             <div class="bottom-panel-left">
+                <!-- New Event / Call Logging Section -->
                 <div class="new-event-section">
                     <div class="section-title">
                         <span>NEW CALL</span>
@@ -445,6 +510,7 @@
                     </div>
                 </div>
 
+                <!-- Unit Status Update Section -->
                 <div class="unit-status-update-section">
                     <div class="section-title">
                         <span>UNIT STATUS UPDATE</span>
@@ -467,6 +533,7 @@
                     </div>
                 </div>
 
+                <!-- New BOLO Section -->
                 <div class="new-bolo-section">
                     <div class="section-title">
                         <span>NEW BOLO</span>
@@ -486,6 +553,7 @@
                 </div>
             </div>
 
+            <!-- Right Panel: Event Details -->
             <div class="bottom-panel-right">
                 <div class="panel-header">
                     <span id="eventDetailHeader">Event Details</span>
@@ -528,6 +596,11 @@
         </div>
     </div>
 
+    <!-- Custom Context Menu for Active Calls -->
+    <div id="customContextMenu">
+        <div class="menu-item" id="removeActiveCallMenuItem">Remove Active Call</div>
+    </div>
+
     <script>
         // --- Get references to HTML elements ---
 
@@ -564,7 +637,6 @@
         const submitNewBoloBtn = document.getElementById('submitNewBolo');
         const clearNewBoloFormBtn = document.getElementById('clearNewBoloForm');
 
-
         // Event Details Panel Elements
         const eventDetailHeader = document.getElementById('eventDetailHeader');
         const eventDetailType = document.getElementById('eventDetailType');
@@ -575,6 +647,11 @@
         const eventDetailDispatchedTime = document.getElementById('eventDetailDispatchedTime');
         const eventDetailNotes = document.getElementById('eventDetailNotes');
         const eventDetailHistory = document.getElementById('eventDetailHistory');
+
+        // Custom Context Menu Elements
+        const customContextMenu = document.getElementById('customContextMenu');
+        const removeActiveCallMenuItem = document.getElementById('removeActiveCallMenuItem');
+        let rightClickedRow = null; // To store the row that was right-clicked
 
 
         // --- Functions to update display ---
@@ -733,7 +810,7 @@
         });
 
 
-        // --- Event Listener for Active Calls table to show details ---
+        // --- Event Listener for Active Calls table to show details (Left Click) ---
         activeCallsTableBody.addEventListener('click', (event) => {
             let row = event.target.closest('tr');
             if (row) {
@@ -742,16 +819,15 @@
                 // Add active class to the clicked row
                 row.classList.add('active-row');
 
-                // Get data from the row
+                // Get data from the row and populate details panel
                 const cells = row.querySelectorAll('td');
-                if (cells.length >= 7) { // Ensure there are enough cells
+                if (cells.length >= 7) {
                     eventDetailHeader.textContent = `EVENT #${cells[0].textContent}`;
                     eventDetailType.textContent = cells[1].textContent;
-                    eventDetailLocation.textContent = cells[3].textContent; // Address
+                    eventDetailLocation.textContent = cells[3].textContent;
                     
-                    // Simple status color logic based on priority
-                    eventDetailStatus.textContent = cells[2].textContent; // Priority as status for simplicity
-                    eventDetailStatus.className = 'status-badge'; // Reset classes
+                    eventDetailStatus.textContent = cells[2].textContent;
+                    eventDetailStatus.className = 'status-badge';
                     if (cells[2].textContent.toUpperCase() === 'HIGH' || cells[2].textContent.toUpperCase() === 'CRITICAL') {
                         eventDetailStatus.classList.add('red');
                     } else if (cells[2].textContent.toUpperCase() === 'MEDIUM') {
@@ -761,13 +837,58 @@
                     }
 
                     eventDetailAssignedUnits.innerHTML = `${cells[6].textContent} <span class="text-muted">(assigned)</span>`;
-                    eventDetailDispatchedTime.textContent = cells[5].textContent; // Time
-                    eventDetailNotes.textContent = cells[4].textContent; // Notes
-                    eventDetailCaller.textContent = 'N/A (from log entry)'; // No caller info in table log
-                    eventDetailHistory.innerHTML = `<p>${cells[5].textContent} - Call created by dispatcher</p>`; // Simple history
+                    eventDetailDispatchedTime.textContent = cells[5].textContent;
+                    eventDetailNotes.textContent = cells[4].textContent;
+                    eventDetailCaller.textContent = 'N/A (from log entry)';
+                    eventDetailHistory.innerHTML = `<p>${cells[5].textContent} - Call created by dispatcher</p>`;
                 }
             }
         });
+
+        // --- Custom Context Menu Logic for Active Calls (Right Click) ---
+
+        // Prevent default context menu and show custom one
+        activeCallsTableBody.addEventListener('contextmenu', (event) => {
+            const row = event.target.closest('tr'); // Get the row that was right-clicked
+            if (row) {
+                event.preventDefault(); // Prevent default browser context menu
+                rightClickedRow = row; // Store reference to the clicked row
+
+                // Position the custom context menu
+                customContextMenu.style.left = `${event.clientX}px`;
+                customContextMenu.style.top = `${event.clientY}px`;
+                customContextMenu.style.display = 'block'; // Show the menu
+
+                // Optional: Highlight the right-clicked row
+                activeCallsTableBody.querySelectorAll('tr').forEach(r => r.classList.remove('active-row'));
+                row.classList.add('active-row');
+            } else {
+                // If right-click was not on a row, hide the menu
+                customContextMenu.style.display = 'none';
+            }
+        });
+
+        // Hide custom context menu when clicking anywhere else
+        document.addEventListener('click', (event) => {
+            if (customContextMenu.style.display === 'block' && !customContextMenu.contains(event.target)) {
+                customContextMenu.style.display = 'none';
+            }
+        });
+
+        // Handle "Remove Active Call" menu item click
+        removeActiveCallMenuItem.addEventListener('click', () => {
+            if (rightClickedRow) {
+                // If the deleted row was the one currently displayed in details, clear details
+                if (rightClickedRow.classList.contains('active-row')) {
+                    clearEventDetailsPanel();
+                }
+                rightClickedRow.remove(); // Remove the row from the table
+                updateActiveCallsCount(); // Update the count
+                rightClickedRow = null; // Clear the stored reference
+            }
+            customContextMenu.style.display = 'none'; // Hide the menu
+        });
+
 
         // --- Initial setup on page load ---
         updateActiveCallsCount(); // Set call count to 0 initially
