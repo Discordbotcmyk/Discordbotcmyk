@@ -17,7 +17,7 @@
             flex-direction: column;
             height: 100vh; /* Full viewport height */
             overflow: hidden; /* Prevent body scroll, content will scroll if needed */
-            position: relative; /* Needed for absolute positioning of top-corner elements */
+            position: relative; /* Needed for absolute positioning of top-corner elements and loading overlay */
         }
 
         /* Top-Corner Elements */
@@ -310,13 +310,15 @@
 
         /* Specific Styling for form sections in bottom-panel-left */
         .unit-status-update-section .form-buttons,
-        .new-bolo-section .form-buttons {
+        .new-bolo-section .form-buttons,
+        .system-controls-section .form-buttons { /* Added system-controls */
             margin-top: 10px;
             border-top: none;
             padding-top: 0;
         }
         .unit-status-update-section .section-title,
-        .new-bolo-section .section-title {
+        .new-bolo-section .section-title,
+        .system-controls-section .section-title { /* Added system-controls */
             border-top: 1px solid #303050; /* Separator for these sections */
             padding-top: 20px;
             margin-top: 20px;
@@ -421,9 +423,35 @@
             background-color: #4a4a8a; /* Hover effect for menu items */
         }
 
+        /* Loading Overlay */
+        #loadingOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent black */
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+            z-index: 2000; /* Above everything else */
+            transition: opacity 0.5s ease-out;
+            opacity: 1;
+        }
+        #loadingOverlay.hidden {
+            opacity: 0;
+            pointer-events: none; /* Allows clicks to pass through when hidden */
+        }
+
     </style>
 </head>
 <body>
+    <div id="loadingOverlay">
+        Loading Data...
+    </div>
+
     <img src="https://media.discordapp.net/attachments/1228141326965411920/1320980715629711381/ca7eeba99227fd35efd8e37416a1680b_1.png?ex=686809e9&is=6866b869&hm=641822dd533a74995556d7f9dc2c6bd76ea3b78266177957ddda38b68cc57f56&=&format=webp&quality=lossless" alt="Logo" class="top-left-logo">
     
     <div class="top-right-info">
@@ -556,6 +584,15 @@
                         <button class="btn-secondary" id="clearNewBoloForm">CLEAR FORM</button>
                     </div>
                 </div>
+
+                <div class="system-controls-section">
+                    <div class="section-title">
+                        <span>SYSTEM CONTROLS</span>
+                    </div>
+                    <div class="form-buttons">
+                        <button class="btn-primary" id="clearAllButton">CLEAR ALL LOGS</button>
+                    </div>
+                </div>
             </div>
 
             <div class="bottom-panel-right">
@@ -605,12 +642,19 @@
     </div>
 
     <script>
+        // --- Data Structures (for single-user persistence via localStorage) ---
+        // For true multi-user live logging, these would be managed by a backend server
+        // that communicates with all connected clients via WebSockets.
+        let activeCallsData = [];
+        let activeUnitsData = [];
+        let activeBolosData = [];
+
         // --- Get references to HTML elements ---
 
         // Active Calls Table
         const activeCallsTableBody = document.getElementById('activeCallsTableBody');
         const activeCallsCountSpan = document.getElementById('activeCallsCount');
-        let callCounter = 0; // Start counter from 0 for empty table
+        let callCounter = 0; 
 
         // New Call Form Elements
         const newCallType = document.getElementById('newCallType');
@@ -632,7 +676,7 @@
         // Active BOLOs List
         const activeBolosList = document.getElementById('activeBolosList');
         const activeBolosCountSpan = document.getElementById('activeBolosCount');
-        let boloCounter = 0; // Start counter from 0 for empty list
+        let boloCounter = 0; 
 
         // New BOLO Form Elements
         const boloUnitCallsignInput = document.getElementById('boloUnitCallsign');
@@ -654,19 +698,25 @@
         // Custom Context Menu Elements
         const customContextMenu = document.getElementById('customContextMenu');
         const removeActiveCallMenuItem = document.getElementById('removeActiveCallMenuItem');
-        let rightClickedRow = null; // To store the row that was right-clicked
+        let rightClickedRow = null; 
 
         // Countdown Timer Elements
         const updateCountdownDisplay = document.getElementById('updateCountdownDisplay');
 
-        // --- Functions to update display ---
+        // System Controls
+        const clearAllButton = document.getElementById('clearAllButton');
+
+        // Loading Overlay
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        // --- Functions to update display counts ---
 
         function updateActiveCallsCount() {
-            activeCallsCountSpan.textContent = activeCallsTableBody.children.length;
+            activeCallsCountSpan.textContent = activeCallsData.length;
         }
 
         function updateActiveBolosCount() {
-            activeBolosCountSpan.textContent = activeBolosList.children.length;
+            activeBolosCountSpan.textContent = activeBolosData.length;
         }
 
         function clearEventDetailsPanel() {
@@ -675,18 +725,131 @@
             eventDetailLocation.textContent = 'N/A';
             eventDetailCaller.textContent = 'N/A';
             eventDetailStatus.textContent = 'N/A';
-            eventDetailStatus.className = 'status-badge'; // Remove color classes
+            eventDetailStatus.className = 'status-badge'; 
             eventDetailAssignedUnits.innerHTML = 'N/A';
             eventDetailDispatchedTime.textContent = 'N/A';
             eventDetailNotes.textContent = 'N/A';
             eventDetailHistory.innerHTML = '<p>No event selected.</p>';
         }
 
+        // --- Data Persistence (localStorage for single user) ---
+        function saveAllData() {
+            localStorage.setItem('activeCallsData', JSON.stringify(activeCallsData));
+            localStorage.setItem('activeUnitsData', JSON.stringify(activeUnitsData));
+            localStorage.setItem('activeBolosData', JSON.stringify(activeBolosData));
+            localStorage.setItem('callCounter', callCounter);
+            localStorage.setItem('boloCounter', boloCounter);
+            console.log("Data saved to localStorage.");
+        }
+
+        function loadAllData() {
+            // Calls
+            const storedCalls = localStorage.getItem('activeCallsData');
+            if (storedCalls) {
+                activeCallsData = JSON.parse(storedCalls);
+                activeCallsTableBody.innerHTML = ''; // Clear current display
+                activeCallsData.forEach(call => addCallToTable(call, false)); // Re-add to DOM, don't save again
+            }
+
+            // Units
+            const storedUnits = localStorage.getItem('activeUnitsData');
+            if (storedUnits) {
+                activeUnitsData = JSON.parse(storedUnits);
+                activeUnitsList.innerHTML = ''; // Clear current display
+                activeUnitsData.forEach(unit => addUnitToDisplay(unit, false)); // Re-add to DOM, don't save again
+            }
+
+            // BOLOs
+            const storedBolos = localStorage.getItem('activeBolosData');
+            if (storedBolos) {
+                activeBolosData = JSON.parse(storedBolos);
+                activeBolosList.innerHTML = ''; // Clear current display
+                activeBolosData.forEach(bolo => addBoloToDisplay(bolo, false)); // Re-add to DOM, don't save again
+            }
+
+            callCounter = parseInt(localStorage.getItem('callCounter') || '0');
+            boloCounter = parseInt(localStorage.getItem('boloCounter') || '0');
+
+            updateActiveCallsCount();
+            updateActiveBolosCount();
+            console.log("Data loaded from localStorage.");
+        }
+
+        // --- Functions to add/update items in DOM and data arrays ---
+
+        function addCallToTable(call, save = true) {
+            const newRow = document.createElement('tr');
+            newRow.setAttribute('data-call-id', call.id); // Store ID for easy lookup
+            newRow.innerHTML = `
+                <td>${call.id}</td>
+                <td>${call.type}</td>
+                <td>${call.priority}</td>
+                <td>${call.address}</td>
+                <td>${call.details}</td>
+                <td>${call.time}</td>
+                <td>${call.assignedUnit}</td>
+            `;
+            activeCallsTableBody.prepend(newRow); // Add to the top of the list
+            
+            if (save) {
+                activeCallsData.unshift(call); // Add to data array
+                saveAllData();
+            }
+            updateActiveCallsCount();
+        }
+
+        function addUnitToDisplay(unit, save = true) {
+            let unitFound = false;
+            activeUnitsList.querySelectorAll('.unit-item').forEach(item => {
+                if (item.dataset.callsign === unit.callsign) {
+                    item.innerHTML = `<span class="unit-id">${unit.callsign}</span> / ${unit.status}`;
+                    unitFound = true;
+                }
+            });
+
+            if (!unitFound) {
+                const newUnitItem = document.createElement('div');
+                newUnitItem.classList.add('unit-item');
+                newUnitItem.dataset.callsign = unit.callsign; 
+                newUnitItem.innerHTML = `<span class="unit-id">${unit.callsign}</span> / ${unit.status}`;
+                activeUnitsList.prepend(newUnitItem); 
+            }
+
+            if (save) {
+                // Update or add unit in activeUnitsData
+                const existingUnitIndex = activeUnitsData.findIndex(u => u.callsign === unit.callsign);
+                if (existingUnitIndex > -1) {
+                    activeUnitsData[existingUnitIndex] = unit;
+                } else {
+                    activeUnitsData.unshift(unit); // Add new unit to the top
+                }
+                saveAllData();
+            }
+        }
+
+        function addBoloToDisplay(bolo, save = true) {
+            const newBoloItem = document.createElement('div');
+            newBoloItem.classList.add('bolo-item');
+            newBoloItem.setAttribute('data-bolo-id', bolo.id); // Store ID
+            newBoloItem.innerHTML = `
+                <span class="bolo-id">${bolo.id} (${bolo.unitId})</span>
+                <span class="bolo-time">${bolo.time}</span><br>
+                ${bolo.description}
+            `;
+            activeBolosList.prepend(newBoloItem); 
+
+            if (save) {
+                activeBolosData.unshift(bolo); 
+                saveAllData();
+            }
+            updateActiveBolosCount(); 
+        }
+
         // --- Countdown Timer Logic ---
         function startCountdown() {
-            // Target date: 7 days from now (July 4, 2025, 5:20:09 AM EDT + 7 days)
-            // Note: In a real application, you'd calculate this dynamically based on desired release.
-            const targetDate = new Date("July 11, 2025 05:20:09 EDT").getTime();
+            // Target date: 7 days from current time (Friday, July 4, 2025, 1:10:50 PM EDT + 7 days)
+            // For a real release, this date would be set in stone or fetched from a server.
+            const targetDate = new Date("July 11, 2025 13:10:50 EDT").getTime(); // Adjust this exact time as needed
 
             const countdownInterval = setInterval(() => {
                 const now = new Date().getTime();
@@ -708,13 +871,12 @@
                 const format = (num) => String(num).padStart(2, '0');
 
                 updateCountdownDisplay.textContent = `Update 0.0.7V: ${format(days)}d ${format(hours)}h ${format(minutes)}m ${format(seconds)}s`;
-            }, 1000); // Update every 1 second
+            }, 1000); 
         }
 
 
-        // --- Event Listeners for Buttons ---
+        // --- Event Listeners for Forms and Buttons ---
 
-        // Submit New Call
         submitNewCallBtn.addEventListener('click', () => {
             const type = newCallType.value;
             const address = newCallAddress.value;
@@ -722,7 +884,6 @@
             const priority = newCallPriority.value;
             const assignedUnit = newCallAssignedUnit.value;
 
-            // Basic validation
             if (!type || !address || !details || !priority || !assignedUnit) {
                 alert('Please fill in all "New Call" fields.');
                 return;
@@ -732,35 +893,26 @@
             const callId = `V${callCounter}`;
             const currentTime = new Date().toLocaleTimeString('en-US', { hour12: false });
 
-            const newRow = document.createElement('tr');
-            newRow.innerHTML = `
-                <td>${callId}</td>
-                <td>${type}</td>
-                <td>${priority}</td>
-                <td>${address}</td>
-                <td>${details}</td>
-                <td>${currentTime}</td>
-                <td>${assignedUnit}</td>
-            `;
-            activeCallsTableBody.prepend(newRow); // Add to the top of the list
-            updateActiveCallsCount(); // Update count
+            const newCall = {
+                id: callId,
+                type: type,
+                address: address,
+                details: details,
+                priority: priority,
+                assignedUnit: assignedUnit,
+                time: currentTime
+            };
+            addCallToTable(newCall); // Adds to DOM and data array, saves
 
-            // Clear form
             newCallType.value = '';
             newCallAddress.value = '';
             newCallDetails.value = '';
-            newCallPriority.value = 'LOW'; // Reset to default
+            newCallPriority.value = 'LOW'; 
             newCallAssignedUnit.value = '';
 
-            console.log('New Call Submitted:', { callId, type, address, details, priority, assignedUnit, currentTime });
-
-            // If this is the first call, or if we want to auto-select, simulate click
-            if (activeCallsTableBody.children.length === 1) {
-                newRow.click(); // Simulate click on the new row to show details
-            }
+            console.log('New Call Submitted:', newCall);
         });
 
-        // Clear New Call Form
         clearNewCallFormBtn.addEventListener('click', () => {
             newCallType.value = '';
             newCallAddress.value = '';
@@ -769,9 +921,8 @@
             newCallAssignedUnit.value = '';
         });
 
-        // Update Unit Status
         updateUnitStatusBtn.addEventListener('click', () => {
-            const callsign = unitCallsignInput.value.trim().toUpperCase(); // Trim whitespace and make uppercase
+            const callsign = unitCallsignInput.value.trim().toUpperCase(); 
             const status = unitStatusSelect.value;
 
             if (!callsign || !status) {
@@ -779,35 +930,15 @@
                 return;
             }
 
-            let unitFound = false;
-            const unitItems = activeUnitsList.querySelectorAll('.unit-item');
+            const unit = { callsign: callsign, status: status };
+            addUnitToDisplay(unit); // Adds/updates in DOM and data array, saves
 
-            unitItems.forEach(item => {
-                const existingCallsign = item.dataset.callsign; // Using data-callsign attribute
-                if (existingCallsign === callsign) {
-                    item.innerHTML = `<span class="unit-id">${callsign}</span> / ${status}`;
-                    unitFound = true;
-                }
-            });
-
-            if (!unitFound) {
-                // If unit not found, add it as a new item to the list
-                const newUnitItem = document.createElement('div');
-                newUnitItem.classList.add('unit-item');
-                newUnitItem.dataset.callsign = callsign; // Store callsign as data attribute
-                newUnitItem.innerHTML = `<span class="unit-id">${callsign}</span> / ${status}`;
-                activeUnitsList.prepend(newUnitItem); // Add to top of the units list
-                console.log(`Added new unit: ${callsign} with status: ${status}`);
-            }
-
-            // Clear form
             unitCallsignInput.value = '';
             unitStatusSelect.value = '';
 
             console.log(`Unit Status Updated: ${callsign} to ${status}`);
         });
 
-        // Submit New BOLO
         submitNewBoloBtn.addEventListener('click', () => {
             const boloUnitId = boloUnitCallsignInput.value.trim().toUpperCase();
             const boloDescription = boloDescriptionTextarea.value.trim();
@@ -821,24 +952,20 @@
             const boloId = `BOLO-${boloCounter}`;
             const currentTime = new Date().toLocaleTimeString('en-US', { hour12: false });
 
-            const newBoloItem = document.createElement('div');
-            newBoloItem.classList.add('bolo-item');
-            newBoloItem.innerHTML = `
-                <span class="bolo-id">${boloId} (${boloUnitId})</span>
-                <span class="bolo-time">${currentTime}</span><br>
-                ${boloDescription}
-            `;
-            activeBolosList.prepend(newBoloItem); // Add to top of the BOLO list
-            updateActiveBolosCount(); // Update count
+            const newBolo = {
+                id: boloId,
+                unitId: boloUnitId,
+                description: boloDescription,
+                time: currentTime
+            };
+            addBoloToDisplay(newBolo); // Adds to DOM and data array, saves
 
-            // Clear form
             boloUnitCallsignInput.value = '';
             boloDescriptionTextarea.value = '';
 
-            console.log('New BOLO Submitted:', { boloId, boloUnitId, boloDescription, currentTime });
+            console.log('New BOLO Submitted:', newBolo);
         });
 
-        // Clear New BOLO Form
         clearNewBoloFormBtn.addEventListener('click', () => {
             boloUnitCallsignInput.value = '';
             boloDescriptionTextarea.value = '';
@@ -854,82 +981,143 @@
                 // Add active class to the clicked row
                 row.classList.add('active-row');
 
-                // Get data from the row and populate details panel
-                const cells = row.querySelectorAll('td');
-                if (cells.length >= 7) {
-                    eventDetailHeader.textContent = `EVENT #${cells[0].textContent}`;
-                    eventDetailType.textContent = cells[1].textContent;
-                    eventDetailLocation.textContent = cells[3].textContent;
+                const callId = row.getAttribute('data-call-id');
+                const call = activeCallsData.find(c => c.id === callId);
+
+                if (call) {
+                    eventDetailHeader.textContent = `EVENT #${call.id}`;
+                    eventDetailType.textContent = call.type;
+                    eventDetailLocation.textContent = call.address;
                     
-                    eventDetailStatus.textContent = cells[2].textContent;
+                    eventDetailStatus.textContent = call.priority;
                     eventDetailStatus.className = 'status-badge';
-                    if (cells[2].textContent.toUpperCase() === 'HIGH' || cells[2].textContent.toUpperCase() === 'CRITICAL') {
+                    if (call.priority.toUpperCase() === 'HIGH' || call.priority.toUpperCase() === 'CRITICAL') {
                         eventDetailStatus.classList.add('red');
-                    } else if (cells[2].textContent.toUpperCase() === 'MEDIUM') {
+                    } else if (call.priority.toUpperCase() === 'MEDIUM') {
                         eventDetailStatus.classList.add('blue');
                     } else {
                         eventDetailStatus.classList.add('green');
                     }
 
-                    eventDetailAssignedUnits.innerHTML = `${cells[6].textContent} <span class="text-muted">(assigned)</span>`;
-                    eventDetailDispatchedTime.textContent = cells[5].textContent;
-                    eventDetailNotes.textContent = cells[4].textContent;
+                    eventDetailAssignedUnits.innerHTML = `${call.assignedUnit} <span class="text-muted">(assigned)</span>`;
+                    eventDetailDispatchedTime.textContent = call.time;
+                    eventDetailNotes.textContent = call.details;
                     eventDetailCaller.textContent = 'N/A (from log entry)';
-                    eventDetailHistory.innerHTML = `<p>${cells[5].textContent} - Call created by dispatcher</p>`;
+                    eventDetailHistory.innerHTML = `<p>${call.time} - Call created by dispatcher</p>`;
                 }
             }
         });
 
         // --- Custom Context Menu Logic for Active Calls (Right Click) ---
-
-        // Prevent default context menu and show custom one
         activeCallsTableBody.addEventListener('contextmenu', (event) => {
-            const row = event.target.closest('tr'); // Get the row that was right-clicked
+            const row = event.target.closest('tr'); 
             if (row) {
-                event.preventDefault(); // Prevent default browser context menu
-                rightClickedRow = row; // Store reference to the clicked row
+                event.preventDefault(); 
+                rightClickedRow = row; 
 
-                // Position the custom context menu
                 customContextMenu.style.left = `${event.clientX}px`;
                 customContextMenu.style.top = `${event.clientY}px`;
-                customContextMenu.style.display = 'block'; // Show the menu
+                customContextMenu.style.display = 'block'; 
 
-                // Optional: Highlight the right-clicked row
                 activeCallsTableBody.querySelectorAll('tr').forEach(r => r.classList.remove('active-row'));
                 row.classList.add('active-row');
             } else {
-                // If right-click was not on a row, hide the menu
                 customContextMenu.style.display = 'none';
             }
         });
 
-        // Hide custom context menu when clicking anywhere else
         document.addEventListener('click', (event) => {
             if (customContextMenu.style.display === 'block' && !customContextMenu.contains(event.target)) {
                 customContextMenu.style.display = 'none';
             }
         });
 
-        // Handle "Remove Active Call" menu item click
         removeActiveCallMenuItem.addEventListener('click', () => {
             if (rightClickedRow) {
-                // If the deleted row was the one currently displayed in details, clear details
+                const callIdToDelete = rightClickedRow.getAttribute('data-call-id');
+                
+                // Remove from data array
+                activeCallsData = activeCallsData.filter(call => call.id !== callIdToDelete);
+                saveAllData();
+
+                // Clear details if the deleted call was displayed
                 if (rightClickedRow.classList.contains('active-row')) {
                     clearEventDetailsPanel();
                 }
-                rightClickedRow.remove(); // Remove the row from the table
-                updateActiveCallsCount(); // Update the count
-                rightClickedRow = null; // Clear the stored reference
+                rightClickedRow.remove(); 
+                updateActiveCallsCount(); 
+                rightClickedRow = null; 
             }
-            customContextMenu.style.display = 'none'; // Hide the menu
+            customContextMenu.style.display = 'none'; 
         });
+
+        // --- Clear All Logs Functionality ---
+        clearAllButton.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear all active calls, units, and BOLOs? This action cannot be undone.')) {
+                clearAllLogs();
+            }
+        });
+
+        function clearAllLogs() {
+            // Clear data arrays
+            activeCallsData = [];
+            activeUnitsData = [];
+            activeBolosData = [];
+
+            // Clear DOM elements
+            activeCallsTableBody.innerHTML = '';
+            activeUnitsList.innerHTML = '';
+            activeBolosList.innerHTML = '';
+
+            // Reset counters
+            callCounter = 0;
+            boloCounter = 0;
+
+            // Clear localStorage
+            localStorage.clear();
+
+            // Update display counts
+            updateActiveCallsCount();
+            updateActiveBolosCount();
+
+            // Clear details panel
+            clearEventDetailsPanel();
+
+            // Clear form fields
+            newCallType.value = '';
+            newCallAddress.value = '';
+            newCallDetails.value = '';
+            newCallPriority.value = 'LOW';
+            newCallAssignedUnit.value = '';
+            unitCallsignInput.value = '';
+            unitStatusSelect.value = '';
+            boloUnitCallsignInput.value = '';
+            boloDescriptionTextarea.value = '';
+
+            console.log("All logs and data cleared.");
+        }
 
 
         // --- Initial setup on page load ---
-        updateActiveCallsCount(); // Set call count to 0 initially
-        updateActiveBolosCount(); // Set bolo count to 0 initially
-        clearEventDetailsPanel(); // Clear the details panel on load
-        startCountdown(); // Start the 7-day countdown
+        function initializeDashboard() {
+            // Show loading overlay
+            loadingOverlay.classList.remove('hidden');
+
+            // Simulate loading time (e.g., fetching from a server or just processing local data)
+            setTimeout(() => {
+                loadAllData(); // Load data from localStorage
+                updateActiveCallsCount(); 
+                updateActiveBolosCount(); 
+                clearEventDetailsPanel(); 
+                startCountdown(); // Start the 7-day countdown
+
+                // Hide loading overlay after data is loaded and rendered
+                loadingOverlay.classList.add('hidden');
+            }, 1000); // Hide after 1 second (adjust as needed)
+        }
+
+        // Call initialization function on page load
+        initializeDashboard();
     </script>
 </body>
 </html>
