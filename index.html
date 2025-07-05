@@ -21,7 +21,7 @@
         }
 
         /* Initial display state: Dashboard elements hidden by default */
-        .dashboard-container, .top-left-logo, .top-right-info, #menuBar {
+        .dashboard-container, .top-left-logo, .top-right-info {
             display: none;
         }
 
@@ -56,39 +56,6 @@
             font-size: 0.9em;
             font-weight: 500;
             color: #ffcc00; /* Yellow for update countdown */
-        }
-
-        /* Menu Bar Styling */
-        #menuBar {
-            display: flex;
-            justify-content: flex-start; /* Align items to the start (left) */
-            background-color: #2a2a4a; /* Darker header */
-            padding: 10px 15px;
-            border-bottom: 1px solid #303050;
-            gap: 10px; /* Space between menu items */
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            box-sizing: border-box; /* Include padding in width */
-            z-index: 90; /* Below top-corner info but above dashboard */
-            padding-left: 70px; /* To make space for the logo */
-        }
-
-        #menuBar button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9em;
-            font-weight: 500;
-            transition: background-color 0.2s ease;
-        }
-
-        #menuBar button:hover {
-            background-color: #0056b3;
         }
 
 
@@ -188,7 +155,7 @@
             color: #ffffff;
         }
         .data-table tr.active-row td {
-            font-weight: 500; /* Make text bolder for active row */
+             font-weight: 500; /* Make text bolder for active row */
         }
 
         /* Unit List (Active Units) */
@@ -483,150 +450,6 @@
             pointer-events: none; /* Allows clicks to pass through when hidden */
         }
 
-        /* Admin Panel Modal Styling */
-        #adminPanelModal {
-            display: none; /* Hidden by default */
-            position: fixed;
-            z-index: 2002; /* Above login and loading overlay */
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.7); /* Dark semi-transparent background */
-            justify-content: center;
-            align-items: center;
-            animation: fadeIn 0.3s forwards;
-        }
-
-        .admin-panel-content {
-            background-color: #20203a;
-            margin: auto;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            width: 80%;
-            max-width: 600px;
-            position: relative;
-            animation: slideIn 0.3s forwards;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .admin-panel-content h2 {
-            color: #ffcc00;
-            margin-top: 0;
-            border-bottom: 1px solid #303050;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
-        }
-
-        .admin-panel-content .form-group label {
-            color: #a0b0d0;
-            font-size: 0.9em;
-        }
-
-        .admin-panel-content .form-group input {
-            background-color: #303050;
-            border: 1px solid #404060;
-            color: #e0e0e0;
-            width: calc(100% - 22px); /* Adjust for padding and border */
-            padding: 10px;
-            border-radius: 4px;
-        }
-
-        .admin-panel-content .form-buttons {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 20px;
-            border-top: none; /* Remove top border if it's already there */
-            padding-top: 0; /* Remove top padding if it's already there */
-        }
-
-        .admin-panel-content .form-buttons button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        .close-button {
-            position: absolute;
-            top: 15px;
-            right: 25px;
-            color: #aaa;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .close-button:hover,
-        .close-button:focus {
-            color: #fff;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        /* Existing User List in Admin Panel */
-        #existingLoginsList {
-            list-style: none;
-            padding: 0;
-            margin-top: 20px;
-            max-height: 200px; /* Limit height and add scroll */
-            overflow-y: auto;
-            border: 1px solid #303050;
-            border-radius: 4px;
-            background-color: #2a2a4a;
-        }
-
-        #existingLoginsList li {
-            padding: 10px 15px;
-            border-bottom: 1px solid #3a3a7a;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        #existingLoginsList li:last-child {
-            border-bottom: none;
-        }
-
-        #existingLoginsList li span {
-            color: #e0e0e0;
-            font-size: 0.9em;
-        }
-
-        #existingLoginsList li .delete-login-btn {
-            background-color: #e35d6a;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 0.8em;
-            transition: background-color 0.2s ease;
-        }
-
-        #existingLoginsList li .delete-login-btn:hover {
-            background-color: #cc4d5b;
-        }
-
-        /* Fade-in animation for CAD */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* Slide-in animation for modal */
-        @keyframes slideIn {
-            from { transform: translateY(-50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
     </style>
 </head>
 <body>
@@ -692,39 +515,6 @@
         </div>
     </div>
 
-    <div id="adminPanelModal">
-        <div class="admin-panel-content">
-            <span class="close-button" id="closeAdminPanel">&times;</span>
-            <h2>Admin Panel: Manage Logins</h2>
-
-            <div class="add-login-section">
-                <div class="section-title">
-                    <span>ADD NEW LOGIN</span>
-                </div>
-                <div class="form-group">
-                    <label for="newCallsignInput">CALLSIGN</label>
-                    <input type="text" id="newCallsignInput" placeholder="Enter new callsign">
-                </div>
-                <div class="form-group">
-                    <label for="newLoginPasswordInput">PASSWORD</label>
-                    <input type="password" id="newLoginPasswordInput" placeholder="Enter new password">
-                </div>
-                <div class="form-buttons">
-                    <button class="btn-primary" id="submitNewLogin">SUBMIT</button>
-                </div>
-            </div>
-
-            <div class="existing-logins-section">
-                <div class="section-title">
-                    <span>EXISTING LOGINS</span>
-                </div>
-                <ul id="existingLoginsList">
-                    </ul>
-            </div>
-        </div>
-    </div>
-
-
     <div id="loadingOverlay">
         Loading Data...
     </div>
@@ -734,10 +524,6 @@
     <div class="top-right-info">
         <span class="top-right-version">0.0.5V</span>
         <span class="top-right-countdown" id="updateCountdownDisplay">Update 0.0.7V: Loading...</span>
-    </div>
-
-    <div id="menuBar">
-        <button id="adminPanelButton">Admin Panel</button>
     </div>
 
     <div class="dashboard-container">
@@ -872,8 +658,7 @@
                     </div>
                     <div class="form-buttons">
                         <button class="btn-primary" id="clearAllButton">CLEAR ALL LOGS</button>
-                        <button class="btn-secondary" id="logoutButton">LOGOUT</button>
-                    </div>
+                        <button class="btn-secondary" id="logoutButton">LOGOUT</button> </div>
                 </div>
             </div>
 
@@ -897,424 +682,598 @@
                     <span class="detail-label">STATUS</span>
                     <span class="detail-value"><span class="status-badge red" id="eventDetailStatus">N/A</span></span>
                 </div>
+                <div class="detail-item">
+                    <span class="detail-label">ASSIGNED UNIT(S)</span>
+                    <span class="detail-value" id="eventDetailAssignedUnits">N/A</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">DISPATCHED AT</span>
+                    <span class="detail-value" id="eventDetailDispatchedTime">N/A</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">NOTES</span>
+                    <span class="detail-value" id="eventDetailNotes">N/A</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">CAD HISTORY</span>
+                    <div class="detail-value" id="eventDetailHistory">
+                        <p>No event selected.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <script>
-        const adminPassword = "BCDC202"; // Admin password
+    <div id="customContextMenu">
+        <div class="menu-item" id="removeActiveCallMenuItem">Remove Active Call</div>
+    </div>
 
-        // Get elements for login and admin panel
+    <script>
+        // --- Data Structures (for single-user persistence via localStorage) ---
+        let activeCallsData = [];
+        let activeUnitsData = [];
+        let activeBolosData = [];
+
+        // --- Get references to HTML elements ---
+
+        // Login System Elements
         const loginContainer = document.getElementById('loginContainer');
         const usernameInput = document.getElementById('usernameInput');
         const passwordInput = document.getElementById('passwordInput');
         const loginButton = document.getElementById('loginButton');
         const loginMessage = document.getElementById('loginMessage');
 
-        const adminPanelButton = document.getElementById('adminPanelButton');
-        const adminPanelModal = document.getElementById('adminPanelModal');
-        const closeAdminPanelButton = document.getElementById('closeAdminPanel');
-        const newCallsignInput = document.getElementById('newCallsignInput');
-        const newLoginPasswordInput = document.getElementById('newLoginPasswordInput');
-        const submitNewLoginButton = document.getElementById('submitNewLogin');
-        const existingLoginsList = document.getElementById('existingLoginsList');
+        // Dashboard Elements to toggle visibility
+        const dashboardContainer = document.querySelector('.dashboard-container');
+        const topLeftLogo = document.querySelector('.top-left-logo');
+        const topRightInfo = document.querySelector('.top-right-info');
 
-        // Initial state: Hide dashboard elements, show login
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelector('.dashboard-container').style.display = 'none';
-            document.querySelector('.top-left-logo').style.display = 'none';
-            document.querySelector('.top-right-info').style.display = 'none';
-            document.getElementById('menuBar').style.display = 'none';
-            loginContainer.style.display = 'flex';
-            document.getElementById('loadingOverlay').classList.add('hidden'); // Ensure loading is hidden on load
-        });
+        // Hardcoded credentials (INSECURE FOR PRODUCTION!)
+        const VALID_USERNAME = 'admin';
+        const VALID_PASSWORD = 'password123'; // CHANGE THIS PASSWORD!
 
-        // Event listener for the main login button
-        loginButton.addEventListener('click', () => {
-            const enteredUsername = usernameInput.value;
-            const enteredPassword = passwordInput.value;
+        // Active Calls Table
+        const activeCallsTableBody = document.getElementById('activeCallsTableBody');
+        const activeCallsCountSpan = document.getElementById('activeCallsCount');
+        let callCounter = 0; 
 
-            // For simplicity, we'll use a hardcoded admin username and the given password
-            // In a real application, you would check against a list of users/hashed passwords
-            if (enteredUsername === "admin" && enteredPassword === adminPassword) {
-                loginMessage.textContent = '';
-                loginContainer.style.display = 'none'; // Hide login
-                document.querySelector('.dashboard-container').style.display = 'flex'; // Show dashboard
-                document.querySelector('.top-left-logo').style.display = 'block';
-                document.querySelector('.top-right-info').style.display = 'flex';
-                document.getElementById('menuBar').style.display = 'flex';
-                initializeDashboard(); // Call a function to set up dashboard data
-            } else {
-                loginMessage.textContent = 'Invalid username or password.';
-            }
-        });
+        // New Call Form Elements
+        const newCallType = document.getElementById('newCallType');
+        const newCallAddress = document.getElementById('newCallAddress');
+        const newCallDetails = document.getElementById('newCallDetails');
+        const newCallPriority = document.getElementById('newCallPriority');
+        const newCallAssignedUnit = document.getElementById('newCallAssignedUnit');
+        const submitNewCallBtn = document.getElementById('submitNewCall');
+        const clearNewCallFormBtn = document.getElementById('clearNewCallForm');
 
-        // Event listener for "Admin Panel" button in the menu bar
-        adminPanelButton.addEventListener('click', () => {
-            // No separate login for admin panel, assumes main login grants access
-            adminPanelModal.style.display = 'flex';
-            renderExistingLogins(); // Populate the existing logins list
-        });
+        // Active Units List
+        const activeUnitsList = document.getElementById('activeUnitsList');
 
-        // Event listener to close Admin Panel Modal
-        closeAdminPanelButton.addEventListener('click', () => {
-            adminPanelModal.style.display = 'none';
-        });
+        // Unit Status Update Form Elements
+        const unitCallsignInput = document.getElementById('unitCallsignInput');
+        const unitStatusSelect = document.getElementById('unitStatusSelect');
+        const updateUnitStatusBtn = document.getElementById('updateUnitStatus');
 
-        // Close modal if clicked outside of content
-        window.addEventListener('click', (event) => {
-            if (event.target === adminPanelModal) {
-                adminPanelModal.style.display = 'none';
-            }
-        });
+        // Active BOLOs List
+        const activeBolosList = document.getElementById('activeBolosList');
+        const activeBolosCountSpan = document.getElementById('activeBolosCount');
+        let boloCounter = 0; 
 
-        // Dummy data for existing logins (replace with actual storage/API in a real app)
-        let existingLogins = [
-            { callsign: 'DISPATCH1', password: 'password123' },
-            { callsign: 'UNITA', password: 'unitApass' }
-        ];
+        // New BOLO Form Elements
+        const boloUnitCallsignInput = document.getElementById('boloUnitCallsign');
+        const boloDescriptionTextarea = document.getElementById('boloDescription');
+        const submitNewBoloBtn = document.getElementById('submitNewBolo');
+        const clearNewBoloFormBtn = document.getElementById('clearNewBoloForm');
 
-        // Function to render existing logins
-        function renderExistingLogins() {
-            existingLoginsList.innerHTML = ''; // Clear current list
-            existingLogins.forEach((login, index) => {
-                const listItem = document.createElement('li');
-                listItem.innerHTML = `
-                    <span>${login.callsign}</span>
-                    <button class="delete-login-btn" data-index="${index}">DELETE</button>
-                `;
-                existingLoginsList.appendChild(listItem);
-            });
+        // Event Details Panel Elements
+        const eventDetailHeader = document.getElementById('eventDetailHeader');
+        const eventDetailType = document.getElementById('eventDetailType');
+        const eventDetailLocation = document.getElementById('eventDetailLocation');
+        const eventDetailCaller = document.getElementById('eventDetailCaller');
+        const eventDetailStatus = document.getElementById('eventDetailStatus');
+        const eventDetailAssignedUnits = document.getElementById('eventDetailAssignedUnits');
+        const eventDetailDispatchedTime = document.getElementById('eventDetailDispatchedTime');
+        const eventDetailNotes = document.getElementById('eventDetailNotes');
+        const eventDetailHistory = document.getElementById('eventDetailHistory');
 
-            // Add event listeners to delete buttons
-            document.querySelectorAll('.delete-login-btn').forEach(button => {
-                button.addEventListener('click', (event) => {
-                    const indexToDelete = parseInt(event.target.dataset.index);
-                    deleteLogin(indexToDelete);
-                });
-            });
-        }
+        // Custom Context Menu Elements
+        const customContextMenu = document.getElementById('customContextMenu');
+        const removeActiveCallMenuItem = document.getElementById('removeActiveCallMenuItem');
+        let rightClickedRow = null; 
 
-        // Function to add new login
-        submitNewLoginButton.addEventListener('click', () => {
-            const newCallsign = newCallsignInput.value.trim();
-            const newPassword = newLoginPasswordInput.value.trim();
-
-            if (newCallsign && newPassword) {
-                existingLogins.push({ callsign: newCallsign, password: newPassword });
-                renderExistingLogins(); // Re-render the list
-                newCallsignInput.value = '';
-                newLoginPasswordInput.value = '';
-                alert('New login added!');
-            } else {
-                alert('Please enter both callsign and password.');
-            }
-        });
-
-        // Function to delete a login
-        function deleteLogin(index) {
-            if (confirm(`Are you sure you want to delete login for ${existingLogins[index].callsign}?`)) {
-                existingLogins.splice(index, 1);
-                renderExistingLogins(); // Re-render the list
-                alert('Login deleted!');
-            }
-        }
-
-
-        // Dashboard Functionality (simplified for this example)
-        let activeCalls = [];
-        let activeUnits = [
-            { id: 'E101', status: '10-8 In Service' },
-            { id: 'P205', status: '10-6 Busy' },
-            { id: 'F302', status: '10-8 In Service' }
-        ];
-        let activeBolos = [];
-        let nextCallId = 1;
-        let nextBoloId = 1;
-
-        function initializeDashboard() {
-            renderActiveCalls();
-            renderActiveUnits();
-            renderActiveBolos();
-            updateCountdown();
-            setInterval(updateCountdown, 1000); // Update countdown every second
-        }
-
-        function renderActiveCalls() {
-            const tableBody = document.getElementById('activeCallsTableBody');
-            tableBody.innerHTML = '';
-            activeCalls.forEach(call => {
-                const row = tableBody.insertRow();
-                row.dataset.callId = call.id; // Store call ID for context menu
-                row.innerHTML = `
-                    <td>${call.id}</td>
-                    <td>${call.type}</td>
-                    <td>${call.priority}</td>
-                    <td>${call.address}</td>
-                    <td>${call.notes}</td>
-                    <td>${call.time}</td>
-                    <td>${call.unit || 'N/A'}</td>
-                `;
-                row.addEventListener('click', () => displayEventDetails(call));
-                row.addEventListener('contextmenu', (e) => {
-                    e.preventDefault(); // Prevent default context menu
-                    showContextMenu(e, call);
-                });
-            });
-            document.getElementById('activeCallsCount').textContent = activeCalls.length;
-        }
-
-        function renderActiveUnits() {
-            const unitList = document.getElementById('activeUnitsList');
-            unitList.innerHTML = '';
-            activeUnits.forEach(unit => {
-                const div = document.createElement('div');
-                div.classList.add('unit-item');
-                div.innerHTML = `<span class="unit-id">${unit.id}</span> ${unit.status}`;
-                unitList.appendChild(div);
-            });
-        }
-
-        function renderActiveBolos() {
-            const boloList = document.getElementById('activeBolosList');
-            boloList.innerHTML = '';
-            activeBolos.forEach(bolo => {
-                const div = document.createElement('div');
-                div.classList.add('bolo-item');
-                div.innerHTML = `<span class="bolo-id">${bolo.id}</span> ${bolo.description} <span class="bolo-time">(${bolo.time})</span>`;
-                boloList.appendChild(div);
-            });
-            document.getElementById('activeBolosCount').textContent = activeBolos.length;
-        }
-
-        function displayEventDetails(call) {
-            document.getElementById('eventDetailHeader').textContent = `Event Details: #${call.id}`;
-            document.getElementById('eventDetailType').textContent = call.type;
-            document.getElementById('eventDetailLocation').textContent = call.address;
-            document.getElementById('eventDetailCaller').textContent = call.caller || 'N/A'; // Assuming caller info could be added
-            const statusBadge = document.getElementById('eventDetailStatus');
-            statusBadge.textContent = call.status || 'Active';
-            statusBadge.className = 'status-badge ' + (call.status === 'Closed' ? 'green' : 'red'); // Example status styling
-        }
-
-        // New Call Form
-        document.getElementById('submitNewCall').addEventListener('click', () => {
-            const type = document.getElementById('newCallType').value;
-            const address = document.getElementById('newCallAddress').value;
-            const details = document.getElementById('newCallDetails').value;
-            const priority = document.getElementById('newCallPriority').value;
-            const assignedUnit = document.getElementById('newCallAssignedUnit').value;
-
-            if (type && address && details) {
-                const newCall = {
-                    id: nextCallId++,
-                    type: type,
-                    address: address,
-                    notes: details,
-                    priority: priority,
-                    time: new Date().toLocaleTimeString(),
-                    unit: assignedUnit || null,
-                    status: 'Active'
-                };
-                activeCalls.push(newCall);
-                renderActiveCalls();
-                displayEventDetails(newCall);
-                clearNewCallForm();
-            } else {
-                alert('Please fill in all required fields for a new call (Type, Address, Details).');
-            }
-        });
-
-        document.getElementById('clearNewCallForm').addEventListener('click', clearNewCallForm);
-        function clearNewCallForm() {
-            document.getElementById('newCallType').value = '';
-            document.getElementById('newCallAddress').value = '';
-            document.getElementById('newCallDetails').value = '';
-            document.getElementById('newCallPriority').value = 'LOW';
-            document.getElementById('newCallAssignedUnit').value = '';
-        }
-
-        // Unit Status Update
-        document.getElementById('updateUnitStatus').addEventListener('click', () => {
-            const unitCallsign = document.getElementById('unitCallsignInput').value.trim().toUpperCase();
-            const newStatus = document.getElementById('unitStatusSelect').value;
-
-            if (unitCallsign && newStatus) {
-                const unitIndex = activeUnits.findIndex(unit => unit.id === unitCallsign);
-                if (unitIndex !== -1) {
-                    activeUnits[unitIndex].status = newStatus;
-                    renderActiveUnits();
-                    alert(`Unit ${unitCallsign} status updated to: ${newStatus}`);
-                } else {
-                    alert(`Unit ${unitCallsign} not found.`);
-                }
-            } else {
-                alert('Please enter unit callsign and select a new status.');
-            }
-        });
-
-        // New BOLO Form
-        document.getElementById('submitNewBolo').addEventListener('click', () => {
-            const boloUnitCallsign = document.getElementById('boloUnitCallsign').value.trim();
-            const boloDescription = document.getElementById('boloDescription').value.trim();
-
-            if (boloUnitCallsign && boloDescription) {
-                const newBolo = {
-                    id: nextBoloId++,
-                    unit: boloUnitCallsign,
-                    description: boloDescription,
-                    time: new Date().toLocaleTimeString()
-                };
-                activeBolos.push(newBolo);
-                renderActiveBolos();
-                clearNewBoloForm();
-            } else {
-                alert('Please enter BOLO ID/Unit and Description.');
-            }
-        });
-
-        document.getElementById('clearNewBoloForm').addEventListener('click', clearNewBoloForm);
-        function clearNewBoloForm() {
-            document.getElementById('boloUnitCallsign').value = '';
-            document.getElementById('boloDescription').value = '';
-        }
+        // Countdown Timer Elements
+        const updateCountdownDisplay = document.getElementById('updateCountdownDisplay');
 
         // System Controls
-        document.getElementById('clearAllButton').addEventListener('click', () => {
-            if (confirm('Are you sure you want to clear all active calls, units, and BOLOs? This action cannot be undone.')) {
-                activeCalls = [];
-                activeUnits = [];
-                activeBolos = [];
-                nextCallId = 1;
-                nextBoloId = 1;
-                renderActiveCalls();
-                renderActiveUnits();
-                renderActiveBolos();
-                displayEventDetails({ id: 'N/A', type: 'N/A', address: 'N/A', caller: 'N/A', status: 'N/A' });
-                alert('All logs cleared!');
-            }
-        });
+        const clearAllButton = document.getElementById('clearAllButton');
+        const logoutButton = document.getElementById('logoutButton'); // Reference for the new logout button
 
-        document.getElementById('logoutButton').addEventListener('click', () => {
-            if (confirm('Are you sure you want to logout?')) {
-                // Clear any session data if applicable
-                // For this client-side app, just reset the view
-                loginContainer.style.display = 'flex';
-                document.querySelector('.dashboard-container').style.display = 'none';
-                document.querySelector('.top-left-logo').style.display = 'none';
-                document.querySelector('.top-right-info').style.display = 'none';
-                document.getElementById('menuBar').style.display = 'none';
-                usernameInput.value = '';
-                passwordInput.value = '';
-                loginMessage.textContent = '';
-                // Optionally clear dashboard data on logout
-                activeCalls = [];
-                activeUnits = [];
-                activeBolos = [];
-                nextCallId = 1;
-                nextBoloId = 1;
-            }
-        });
+        // Loading Overlay
+        const loadingOverlay = document.getElementById('loadingOverlay');
 
-        // Context Menu
-        const customContextMenu = document.createElement('div');
-        customContextMenu.id = 'customContextMenu';
-        customContextMenu.innerHTML = `
-            <div class="menu-item" data-action="close">Close Call</div>
-            <div class="menu-item" data-action="assign">Assign Unit</div>
-            <div class="menu-item" data-action="edit">Edit Call</div>
-        `;
-        document.body.appendChild(customContextMenu);
+        // --- Functions to update display counts ---
 
-        let currentCallForContext = null; // To store the call object when context menu is opened
-
-        function showContextMenu(event, call) {
-            customContextMenu.style.display = 'block';
-            customContextMenu.style.left = event.pageX + 'px';
-            customContextMenu.style.top = event.pageY + 'px';
-            currentCallForContext = call;
+        function updateActiveCallsCount() {
+            activeCallsCountSpan.textContent = activeCallsData.length;
         }
 
-        document.addEventListener('click', () => {
-            customContextMenu.style.display = 'none';
-        });
+        function updateActiveBolosCount() {
+            activeBolosCountSpan.textContent = activeBolosData.length;
+        }
 
-        customContextMenu.addEventListener('click', (event) => {
-            if (!currentCallForContext) return;
+        function clearEventDetailsPanel() {
+            eventDetailHeader.textContent = 'Event Details';
+            eventDetailType.textContent = 'N/A';
+            eventDetailLocation.textContent = 'N/A';
+            eventDetailCaller.textContent = 'N/A';
+            eventDetailStatus.textContent = 'N/A';
+            eventDetailStatus.className = 'status-badge'; 
+            eventDetailAssignedUnits.innerHTML = 'N/A';
+            eventDetailDispatchedTime.textContent = 'N/A';
+            eventDetailNotes.textContent = 'N/A';
+            eventDetailHistory.innerHTML = '<p>No event selected.</p>';
+        }
 
-            const action = event.target.dataset.action;
-            if (action) {
-                switch (action) {
-                    case 'close':
-                        closeCall(currentCallForContext.id);
-                        break;
-                    case 'assign':
-                        const newUnit = prompt('Enter unit ID to assign:');
-                        if (newUnit) assignUnitToCall(currentCallForContext.id, newUnit);
-                        break;
-                    case 'edit':
-                        alert('Edit functionality not yet implemented.'); // Placeholder
-                        break;
+        // --- Data Persistence (localStorage for single user) ---
+        function saveAllData() {
+            localStorage.setItem('activeCallsData', JSON.stringify(activeCallsData));
+            localStorage.setItem('activeUnitsData', JSON.stringify(activeUnitsData));
+            localStorage.setItem('activeBolosData', JSON.stringify(activeBolosData));
+            localStorage.setItem('callCounter', callCounter);
+            localStorage.setItem('boloCounter', boloCounter);
+            console.log("Data saved to localStorage.");
+        }
+
+        function loadAllData() {
+            // Calls
+            const storedCalls = localStorage.getItem('activeCallsData');
+            if (storedCalls) {
+                activeCallsData = JSON.parse(storedCalls);
+                activeCallsTableBody.innerHTML = ''; // Clear current display
+                activeCallsData.forEach(call => addCallToTable(call, false)); // Re-add to DOM, don't save again
+            }
+
+            // Units
+            const storedUnits = localStorage.getItem('activeUnitsData');
+            if (storedUnits) {
+                activeUnitsData = JSON.parse(storedUnits);
+                activeUnitsList.innerHTML = ''; // Clear current display
+                activeUnitsData.forEach(unit => addUnitToDisplay(unit, false)); // Re-add to DOM, don't save again
+            }
+
+            // BOLOs
+            const storedBolos = localStorage.getItem('activeBolosData');
+            if (storedBolos) {
+                activeBolosData = JSON.parse(storedBolos);
+                activeBolosList.innerHTML = ''; // Clear current display
+                activeBolosData.forEach(bolo => addBoloToDisplay(bolo, false)); // Re-add to DOM, don't save again
+            }
+
+            callCounter = parseInt(localStorage.getItem('callCounter') || '0');
+            boloCounter = parseInt(localStorage.getItem('boloCounter') || '0');
+
+            updateActiveCallsCount();
+            updateActiveBolosCount();
+            console.log("Data loaded from localStorage.");
+        }
+
+        // --- Functions to add/update items in DOM and data arrays ---
+
+        function addCallToTable(call, save = true) {
+            const newRow = document.createElement('tr');
+            newRow.setAttribute('data-call-id', call.id); // Store ID for easy lookup
+            newRow.innerHTML = `
+                <td>${call.id}</td>
+                <td>${call.type}</td>
+                <td>${call.priority}</td>
+                <td>${call.address}</td>
+                <td>${call.details}</td>
+                <td>${call.time}</td>
+                <td>${call.assignedUnit}</td>
+            `;
+            activeCallsTableBody.prepend(newRow); // Add to the top of the list
+            
+            if (save) {
+                activeCallsData.unshift(call); // Add to data array
+                saveAllData();
+            }
+            updateActiveCallsCount();
+        }
+
+        function addUnitToDisplay(unit, save = true) {
+            let unitFound = false;
+            activeUnitsList.querySelectorAll('.unit-item').forEach(item => {
+                if (item.dataset.callsign === unit.callsign) {
+                    item.innerHTML = `<span class="unit-id">${unit.callsign}</span> / ${unit.status}`;
+                    unitFound = true;
                 }
-                customContextMenu.style.display = 'none';
-                currentCallForContext = null;
-            }
-        });
+            });
 
-        function closeCall(callId) {
-            const callIndex = activeCalls.findIndex(call => call.id === callId);
-            if (callIndex !== -1) {
-                activeCalls.splice(callIndex, 1); // Remove the call
-                renderActiveCalls();
-                alert(`Call #${callId} closed.`);
-                // Clear details panel if the closed call was displayed
-                if (document.getElementById('eventDetailHeader').textContent === `Event Details: #${callId}`) {
-                    displayEventDetails({ id: 'N/A', type: 'N/A', address: 'N/A', caller: 'N/A', status: 'N/A' });
+            if (!unitFound) {
+                const newUnitItem = document.createElement('div');
+                newUnitItem.classList.add('unit-item');
+                newUnitItem.dataset.callsign = unit.callsign; 
+                newUnitItem.innerHTML = `<span class="unit-id">${unit.callsign}</span> / ${unit.status}`;
+                activeUnitsList.prepend(newUnitItem); 
+            }
+
+            if (save) {
+                // Update or add unit in activeUnitsData
+                const existingUnitIndex = activeUnitsData.findIndex(u => u.callsign === unit.callsign);
+                if (existingUnitIndex > -1) {
+                    activeUnitsData[existingUnitIndex] = unit;
+                } else {
+                    activeUnitsData.unshift(unit); // Add new unit to the top
                 }
+                saveAllData();
             }
         }
 
-        function assignUnitToCall(callId, unitId) {
-            const call = activeCalls.find(c => c.id === callId);
-            if (call) {
-                call.unit = unitId.toUpperCase();
-                renderActiveCalls();
-                alert(`Unit ${unitId.toUpperCase()} assigned to call #${callId}.`);
-                displayEventDetails(call); // Update displayed details
-            } else {
-                alert(`Call #${callId} not found.`);
+        function addBoloToDisplay(bolo, save = true) {
+            const newBoloItem = document.createElement('div');
+            newBoloItem.classList.add('bolo-item');
+            newBoloItem.setAttribute('data-bolo-id', bolo.id); // Store ID
+            newBoloItem.innerHTML = `
+                <span class="bolo-id">${bolo.id} (${bolo.unitId})</span>
+                <span class="bolo-time">${bolo.time}</span><br>
+                ${bolo.description}
+            `;
+            activeBolosList.prepend(newBoloItem); 
+
+            if (save) {
+                activeBolosData.unshift(bolo); 
+                saveAllData();
             }
+            updateActiveBolosCount(); 
+        }
+
+        // --- Countdown Timer Logic ---
+        function startCountdown() {
+            // Target date: 7 days from current time (Friday, July 4, 2025, 1:10:50 PM EDT + 7 days)
+            // For a real release, this date would be set in stone or fetched from a server.
+            const targetDate = new Date("July 11, 2025 13:10:50 EDT").getTime(); // Adjust this exact time as needed
+
+            const countdownInterval = setInterval(() => {
+                const now = new Date().getTime();
+                const distance = targetDate - now;
+
+                if (distance < 0) {
+                    clearInterval(countdownInterval);
+                    updateCountdownDisplay.textContent = "Update 0.0.7V: LAUNCHED!";
+                    updateCountdownDisplay.style.color = '#90ee90'; // Green for launched
+                    return;
+                }
+
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                // Pad with leading zeros
+                const format = (num) => String(num).padStart(2, '0');
+
+                updateCountdownDisplay.textContent = `Update 0.0.7V: ${format(days)}d ${format(hours)}h ${format(minutes)}m ${format(seconds)}s`;
+            }, 1000); 
         }
 
 
-        // Update Countdown Display
-        function updateCountdown() {
-            const now = new Date();
-            const targetDate = new Date();
-            targetDate.setFullYear(2025, 6, 20); // July 20, 2025 (Month is 0-indexed)
-            targetDate.setHours(0, 0, 0, 0); // Midnight
+        // --- Event Listeners for Forms and Buttons ---
 
-            const timeLeft = targetDate.getTime() - now.getTime(); // Time in milliseconds
+        submitNewCallBtn.addEventListener('click', () => {
+            const type = newCallType.value;
+            const address = newCallAddress.value;
+            const details = newCallDetails.value;
+            const priority = newCallPriority.value;
+            const assignedUnit = newCallAssignedUnit.value;
 
-            if (timeLeft <= 0) {
-                document.getElementById('updateCountdownDisplay').textContent = 'Update 0.0.7V: LIVE!';
+            if (!type || !address || !details || !priority || !assignedUnit) {
+                alert('Please fill in all "New Call" fields.');
                 return;
             }
 
-            const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+            callCounter++;
+            const callId = `V${callCounter}`;
+            const currentTime = new Date().toLocaleTimeString('en-US', { hour12: false });
 
-            document.getElementById('updateCountdownDisplay').textContent =
-                `Update 0.0.7V: ${days}d ${hours}h ${minutes}m ${seconds}s`;
-        }
+            const newCall = {
+                id: callId,
+                type: type,
+                address: address,
+                details: details,
+                priority: priority,
+                assignedUnit: assignedUnit,
+                time: currentTime
+            };
+            addCallToTable(newCall); // Adds to DOM and data array, saves
 
-        // Initial call to hide loading overlay when scripts are ready
-        window.addEventListener('load', () => {
-            document.getElementById('loadingOverlay').classList.add('hidden');
+            newCallType.value = '';
+            newCallAddress.value = '';
+            newCallDetails.value = '';
+            newCallPriority.value = 'LOW'; 
+            newCallAssignedUnit.value = '';
+
+            console.log('New Call Submitted:', newCall);
         });
 
+        clearNewCallFormBtn.addEventListener('click', () => {
+            newCallType.value = '';
+            newCallAddress.value = '';
+            newCallDetails.value = '';
+            newCallPriority.value = 'LOW';
+            newCallAssignedUnit.value = '';
+        });
+
+        updateUnitStatusBtn.addEventListener('click', () => {
+            const callsign = unitCallsignInput.value.trim().toUpperCase(); 
+            const status = unitStatusSelect.value;
+
+            if (!callsign || !status) {
+                alert('Please enter a Unit Callsign and select a Status.');
+                return;
+            }
+
+            const unit = { callsign: callsign, status: status };
+            addUnitToDisplay(unit); // Adds/updates in DOM and data array, saves
+
+            unitCallsignInput.value = '';
+            unitStatusSelect.value = '';
+
+            console.log(`Unit Status Updated: ${callsign} to ${status}`);
+        });
+
+        submitNewBoloBtn.addEventListener('click', () => {
+            const boloUnitId = boloUnitCallsignInput.value.trim().toUpperCase();
+            const boloDescription = boloDescriptionTextarea.value.trim();
+
+            if (!boloUnitId || !boloDescription) {
+                alert('Please fill in both "Unit/BOLO ID" and "Description" for the New BOLO.');
+                return;
+            }
+
+            boloCounter++;
+            const boloId = `BOLO-${boloCounter}`;
+            const currentTime = new Date().toLocaleTimeString('en-US', { hour12: false });
+
+            const newBolo = {
+                id: boloId,
+                unitId: boloUnitId,
+                description: boloDescription,
+                time: currentTime
+            };
+            addBoloToDisplay(newBolo); // Adds to DOM and data array, saves
+
+            boloUnitCallsignInput.value = '';
+            boloDescriptionTextarea.value = '';
+
+            console.log('New BOLO Submitted:', newBolo);
+        });
+
+        clearNewBoloFormBtn.addEventListener('click', () => {
+            boloUnitCallsignInput.value = '';
+            boloDescriptionTextarea.value = '';
+        });
+
+
+        // --- Event Listener for Active Calls table to show details (Left Click) ---
+        activeCallsTableBody.addEventListener('click', (event) => {
+            let row = event.target.closest('tr');
+            if (row) {
+                // Remove active class from all rows
+                activeCallsTableBody.querySelectorAll('tr').forEach(r => r.classList.remove('active-row'));
+                // Add active class to the clicked row
+                row.classList.add('active-row');
+
+                const callId = row.getAttribute('data-call-id');
+                const call = activeCallsData.find(c => c.id === callId);
+
+                if (call) {
+                    eventDetailHeader.textContent = `EVENT #${call.id}`;
+                    eventDetailType.textContent = call.type;
+                    eventDetailLocation.textContent = call.address;
+                    
+                    eventDetailStatus.textContent = call.priority;
+                    eventDetailStatus.className = 'status-badge';
+                    if (call.priority.toUpperCase() === 'HIGH' || call.priority.toUpperCase() === 'CRITICAL') {
+                        eventDetailStatus.classList.add('red');
+                    } else if (call.priority.toUpperCase() === 'MEDIUM') {
+                        eventDetailStatus.classList.add('blue');
+                    } else {
+                        eventDetailStatus.classList.add('green');
+                    }
+
+                    eventDetailAssignedUnits.innerHTML = `${call.assignedUnit} <span class="text-muted">(assigned)</span>`;
+                    eventDetailDispatchedTime.textContent = call.time;
+                    eventDetailNotes.textContent = call.details;
+                    eventDetailCaller.textContent = 'N/A (from log entry)';
+                    eventDetailHistory.innerHTML = `<p>${call.time} - Call created by dispatcher</p>`;
+                }
+            }
+        });
+
+        // --- Custom Context Menu Logic for Active Calls (Right Click) ---
+        activeCallsTableBody.addEventListener('contextmenu', (event) => {
+            const row = event.target.closest('tr'); 
+            if (row) {
+                event.preventDefault(); 
+                rightClickedRow = row; 
+
+                customContextMenu.style.left = `${event.clientX}px`;
+                customContextMenu.style.top = `${event.clientY}px`;
+                customContextMenu.style.display = 'block'; 
+
+                activeCallsTableBody.querySelectorAll('tr').forEach(r => r.classList.remove('active-row'));
+                row.classList.add('active-row');
+            } else {
+                customContextMenu.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            if (customContextMenu.style.display === 'block' && !customContextMenu.contains(event.target)) {
+                customContextMenu.style.display = 'none';
+            }
+        });
+
+        removeActiveCallMenuItem.addEventListener('click', () => {
+            if (rightClickedRow) {
+                const callIdToDelete = rightClickedRow.getAttribute('data-call-id');
+                
+                // Remove from data array
+                activeCallsData = activeCallsData.filter(call => call.id !== callIdToDelete);
+                saveAllData();
+
+                // Clear details if the deleted call was displayed
+                if (rightClickedRow.classList.contains('active-row')) {
+                    clearEventDetailsPanel();
+                }
+                rightClickedRow.remove(); 
+                updateActiveCallsCount(); 
+                rightClickedRow = null; 
+            }
+            customContextMenu.style.display = 'none'; 
+        });
+
+        // --- Clear All Logs Functionality ---
+        clearAllButton.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear all active calls, units, and BOLOs? This action cannot be undone.')) {
+                clearAllLogs(true); // Pass true to also clear login status if desired, or false to remain logged in
+            }
+        });
+
+        function clearAllLogs(shouldClearLogin = false) { // Added parameter
+            // Clear data arrays
+            activeCallsData = [];
+            activeUnitsData = [];
+            activeBolosData = [];
+
+            // Clear DOM elements
+            activeCallsTableBody.innerHTML = '';
+            activeUnitsList.innerHTML = '';
+            activeBolosList.innerHTML = '';
+
+            // Reset counters
+            callCounter = 0;
+            boloCounter = 0;
+
+            // Clear localStorage, but conditionally keep 'isLoggedIn'
+            const isLoggedInStatus = localStorage.getItem('isLoggedIn');
+            localStorage.clear();
+            if (!shouldClearLogin && isLoggedInStatus) { // If we shouldn't clear login, restore it
+                localStorage.setItem('isLoggedIn', isLoggedInStatus);
+            }
+
+            // Update display counts
+            updateActiveCallsCount();
+            updateActiveBolosCount();
+
+            // Clear details panel
+            clearEventDetailsPanel();
+
+            // Clear form fields
+            newCallType.value = '';
+            newCallAddress.value = '';
+            newCallDetails.value = '';
+            newCallPriority.value = 'LOW';
+            newCallAssignedUnit.value = '';
+            unitCallsignInput.value = '';
+            unitStatusSelect.value = '';
+            boloUnitCallsignInput.value = '';
+            boloDescriptionTextarea.value = '';
+
+            console.log("All logs and data cleared.");
+        }
+
+
+        // --- Login/Logout Functions ---
+
+        function showLogin() {
+            loginContainer.style.display = 'flex';
+            dashboardContainer.style.display = 'none';
+            topLeftLogo.style.display = 'none';
+            topRightInfo.style.display = 'none';
+            loadingOverlay.classList.add('hidden'); // Ensure loading overlay is hidden for login
+            usernameInput.focus();
+        }
+
+        function showDashboard() {
+            loginContainer.style.display = 'none';
+            dashboardContainer.style.display = 'flex'; // Restore original display property
+            topLeftLogo.style.display = 'block'; // Restore original display property
+            topRightInfo.style.display = 'flex'; // Restore original display property
+            // We'll manage loadingOverlay in initializeDashboard
+        }
+
+        function performLogin() {
+            const enteredUsername = usernameInput.value;
+            const enteredPassword = passwordInput.value;
+
+            if (enteredUsername === VALID_USERNAME && enteredPassword === VALID_PASSWORD) {
+                localStorage.setItem('isLoggedIn', 'true'); // Set a flag in local storage
+                loginMessage.textContent = '';
+                usernameInput.value = '';
+                passwordInput.value = '';
+                initializeDashboard(); // Load data and show dashboard
+            } else {
+                loginMessage.textContent = 'Invalid username or password.';
+            }
+        }
+
+        function performLogout() {
+            if (confirm('Are you sure you want to log out?')) {
+                localStorage.removeItem('isLoggedIn'); // Clear the login flag
+                clearAllLogs(true); // Clear all data and also the login status
+                showLogin(); // Go back to the login screen
+                console.log('User logged out.');
+            }
+        }
+
+        // --- Event Listeners for Login/Logout ---
+        loginButton.addEventListener('click', performLogin);
+
+        usernameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                passwordInput.focus();
+            }
+        });
+
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performLogin();
+            }
+        });
+
+        // Add this check in case the button wasn't added in HTML (though it should be now)
+        if (logoutButton) {
+            logoutButton.addEventListener('click', performLogout);
+        }
+
+
+        // --- Initial setup on page load ---
+        function initializeDashboard() {
+            if (localStorage.getItem('isLoggedIn') === 'true') {
+                // Show loading overlay only if we're actually loading the dashboard
+                loadingOverlay.classList.remove('hidden');
+                showDashboard(); // Make dashboard visible
+
+                // Simulate loading time (e.g., fetching from a server or just processing local data)
+                setTimeout(() => {
+                    loadAllData(); // Load data from localStorage
+                    updateActiveCallsCount(); 
+                    updateActiveBolosCount(); 
+                    clearEventDetailsPanel(); 
+                    startCountdown(); // Start the 7-day countdown
+
+                    // Hide loading overlay after data is loaded and rendered
+                    loadingOverlay.classList.add('hidden');
+                }, 1000); // Hide after 1 second (adjust as needed)
+            } else {
+                // If not logged in, show the login screen
+                showLogin();
+            }
+        }
+
+        // Call initialization function on page load
+        initializeDashboard();
     </script>
 </body>
 </html>
