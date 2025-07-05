@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Broward County Dispatch Cad</title>
+    <title>Broward County Dispatch Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* General Body Styles */
@@ -678,7 +678,7 @@
 
     <div class="login-container" id="loginContainer">
         <div class="login-box">
-            <h2>WV Dispatch Login</h2>
+            <h2>Broward County Dispatch Login</h2>
             <div class="input-group">
                 <label for="usernameInput">Username:</label>
                 <input type="text" id="usernameInput" placeholder="Enter username">
@@ -695,11 +695,11 @@
     <div class="dashboard-container" id="dashboardContainer">
         <header>
             <div class="top-left-logo" id="topLeftLogo">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Seal_of_West_Virginia.svg/1200px-Seal_of_West_Virginia.svg.png" alt="West Virginia Seal">
+                <img src="https://media.discordapp.net/attachments/1228141326965411920/1320980715629711381/ca7eeba99227fd35efd8e37416a1680b_1.png?ex=686a0429&is=6868b2a9&hm=a644780f197b87d7320940160a38906b078dc77a8e90b29ecd40a9fea1886c0c&=&format=webp&quality=lossless" alt="Broward County">
             </div>
             <div class="top-right-info" id="topRightInfo">
                 <span class="location-time" id="locationTime"></span>
-                <span class="user-status">User: **Dispatcher** | Status: **On Duty**</span>
+                <span class="user-status">User: **C-100** | Status: **On Duty**</span>
                 <button id="logoutButton">Logout</button>
             </div>
         </header>
@@ -934,7 +934,7 @@
 
         // Global variable for storing user accounts (replace VALID_USERNAME/PASSWORD)
         let userAccounts = [
-            { username: "dispatcher", password: "password123" } // Initial default user
+            { username: "C-100", password: "1234321" } // Initial default user updated here
         ];
 
         // Variable to hold the currently selected user in the admin panel
@@ -1393,7 +1393,7 @@
             if (currentUserAccounts) { // Always restore user accounts if they exist (unless explicitly logging out)
                 localStorage.setItem('userAccounts', currentUserAccounts);
             } else { // If userAccounts were cleared or never existed, re-initialize with default
-                userAccounts = [{ username: "dispatcher", password: "password123" }];
+                userAccounts = [{ username: "C-100", password: "1234321" }]; // Default user re-applied if cleared
                 localStorage.setItem('userAccounts', JSON.stringify(userAccounts));
             }
 
