@@ -3,824 +3,989 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dispatch System Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <title>West Virginia Dispatch Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* General Body Styling */
+        /* General Body Styles */
         body {
+            font-family: 'Roboto Mono', monospace;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
             margin: 0;
             padding: 0;
-            font-family: 'Roboto', sans-serif;
-            background-color: #1a1a2e; /* Dark background */
-            color: #e0e0e0; /* Light text color */
             display: flex;
             flex-direction: column;
-            height: 100vh; /* Full viewport height */
-            overflow: hidden; /* Prevent body scroll, content will scroll if needed */
-            position: relative; /* Needed for absolute positioning of top-corner elements and loading overlay */
+            min-height: 100vh;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+            font-size: 0.95em;
         }
 
-        /* Initial display state: Dashboard elements hidden by default */
-        .dashboard-container, .top-left-logo, .top-right-info {
-            display: none;
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
         }
 
-        /* Top-Corner Elements */
-        .top-left-logo {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            width: 50px; /* Adjust size as needed */
-            height: auto;
-            z-index: 100; /* Ensure it's on top */
-            border-radius: 5px; /* Optional: rounded corners for the image */
+        .loading-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
         }
 
-        .top-right-info {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 100;
-            display: flex; /* To stack version and countdown */
-            flex-direction: column;
-            align-items: flex-end; /* Align text to the right */
-            gap: 5px; /* Space between version and countdown */
+        .loading-spinner {
+            border: 8px solid #444;
+            border-top: 8px solid #007bff;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
         }
 
-        .top-right-version {
-            font-size: 0.8em;
-            color: #90a0c0;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
-        .top-right-countdown {
-            font-size: 0.9em;
-            font-weight: 500;
-            color: #ffcc00; /* Yellow for update countdown */
+        /* Login Container */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #2b2b2b, #0e0e0e);
         }
 
+        .login-box {
+            background-color: #2a2a2a;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            width: 350px;
+        }
 
-        /* Main Container for the entire dashboard */
+        .login-box h2 {
+            color: #007bff;
+            margin-bottom: 30px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2em;
+        }
+
+        .login-box .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .login-box label {
+            display: block;
+            margin-bottom: 8px;
+            color: #bbb;
+            font-weight: bold;
+        }
+
+        .login-box input[type="text"],
+        .login-box input[type="password"] {
+            width: calc(100% - 20px);
+            padding: 12px 10px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background-color: #333;
+            color: #eee;
+            font-size: 1em;
+        }
+
+        .login-box input[type="text"]:focus,
+        .login-box input[type="password"]:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .login-box button:hover {
+            background-color: #0056b3;
+        }
+
+        .login-message {
+            color: #dc3545;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        /* Dashboard Container */
         .dashboard-container {
-            display: flex;
+            display: none; /* Hidden by default, shown after login */
             flex-direction: column;
             flex-grow: 1;
-            padding: 10px;
-            gap: 10px; /* Space between top and bottom sections */
-            /* Add padding to prevent content from being hidden by top-corner elements */
-            padding-top: 60px; /* Adjust based on logo/version height + desired spacing */
         }
 
-        /* Top Section Layout - Adjusted to accommodate 3 columns */
-        .top-section {
-            display: flex;
-            gap: 10px;
-            flex-grow: 1; /* Allows it to take available space */
-            min-height: 0; /* Important for flex items with scrollable children */
-        }
-
-        /* Panels in Top Section */
-        .top-panel-left, .top-panel-middle, .top-panel-right { /* Added top-panel-middle */
-            background-color: #20203a; /* Slightly lighter dark blue */
-            border-radius: 8px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Flex distribution for top panels */
-        .top-panel-left { /* Active Calls */
-            flex: 4; /* Larger for the main call list */
-        }
-        .top-panel-middle { /* Active Units */
-            flex: 1.5; /* Slightly larger than BOLO, but smaller than calls */
-        }
-        .top-panel-right { /* Active BOLOs */
-            flex: 1.5; /* Dedicated space for BOLOs */
-        }
-
-
-        .panel-header {
-            background-color: #2a2a4a; /* Darker header */
-            padding: 10px 15px;
-            font-size: 0.9em;
-            font-weight: 500;
-            color: #90a0c0; /* Lighter blue for headers */
-            border-bottom: 1px solid #303050;
+        /* Header */
+        header {
+            background-color: #222;
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid #333;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
-        .panel-content {
-            flex-grow: 1;
-            overflow-y: auto; /* Enable vertical scrolling for content */
-            padding: 0 5px; /* Padding for content, adjust as needed */
+        .top-left-logo img {
+            height: 40px;
         }
 
-        /* Table/List Styling for Top Left Panel (Active Calls) */
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85em;
-        }
-
-        .data-table th, .data-table td {
-            padding: 8px 10px;
-            text-align: left;
-            border-bottom: 1px solid #282848; /* Lighter border for rows */
-            white-space: nowrap; /* Prevent text wrapping */
-            overflow: hidden;
-            text-overflow: ellipsis; /* Add ellipsis for overflow */
-        }
-
-        .data-table th {
-            background-color: #252545;
-            font-weight: 400;
-            color: #a0b0d0;
-            position: sticky; /* Sticky headers for scrolling */
-            top: 0;
-            z-index: 1;
-        }
-
-        .data-table tr {
-            cursor: pointer; /* Indicate rows are clickable/selectable */
-        }
-
-        .data-table tr:hover {
-            background-color: #28284f; /* Hover effect for rows */
-        }
-
-        .data-table tr.active-row {
-            background-color: #3a3a7a; /* Highlight active row */
-            color: #ffffff;
-        }
-        .data-table tr.active-row td {
-             font-weight: 500; /* Make text bolder for active row */
-        }
-
-        /* Unit List (Active Units) */
-        .unit-list {
-            padding: 10px 0;
-        }
-
-        .unit-item {
-            padding: 8px 15px;
-            font-size: 0.9em;
-            border-bottom: 1px solid #282848;
-            cursor: pointer;
-        }
-        .unit-item:last-child {
-            border-bottom: none;
-        }
-        .unit-item:hover {
-            background-color: #28284f;
-        }
-        .unit-item.active {
-            background-color: #304060; /* Blueish highlight for active unit */
-            color: #ffffff;
-            font-weight: 500;
-        }
-        .unit-item .unit-id {
-            font-weight: 700;
-            color: #70b0e0; /* Brighter blue for unit ID */
-            margin-right: 5px;
-        }
-        .unit-item.active .unit-id {
-            color: #fff; /* White for active unit ID */
-        }
-
-        /* BOLO List (Active BOLOs) */
-        .bolo-list {
-            padding: 10px 0;
-        }
-
-        .bolo-item {
-            padding: 8px 15px;
-            font-size: 0.9em;
-            border-bottom: 1px solid #282848;
-            cursor: pointer;
-        }
-        .bolo-item:last-child {
-            border-bottom: none;
-        }
-        .bolo-item:hover {
-            background-color: #28284f;
-        }
-        .bolo-item .bolo-id {
-            font-weight: 700;
-            color: #e0b070; /* Orangeish for BOLO ID */
-            margin-right: 5px;
-        }
-        .bolo-item .bolo-time {
-            font-size: 0.8em;
-            color: #90a0c0;
-            margin-left: 5px;
-        }
-
-
-        /* Bottom Section Layout (Yellow highlighted in image) */
-        .bottom-section {
+        .top-right-info {
             display: flex;
-            gap: 10px;
-            flex-shrink: 0; /* Prevent it from shrinking */
-            height: 350px; /* Fixed height as per image's proportion */
-            border: 2px solid #ffcc00; /* Yellow border as in image */
-            border-radius: 8px; /* Match panel radius */
-            overflow: hidden; /* Ensure content stays within border */
-            background-color: #20203a; /* Background for the entire bottom section */
+            align-items: center;
+            gap: 20px;
         }
 
-        /* Left Panel in Bottom Section (Forms) */
-        .bottom-panel-left {
-            flex: 1;
-            padding: 15px;
+        .top-right-info .location-time,
+        .top-right-info .user-status {
+            color: #bbb;
+            font-size: 0.9em;
+        }
+
+        .top-right-info .user-status {
+            font-weight: bold;
+        }
+
+        .top-right-info button {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+
+        .top-right-info button:hover {
+            background-color: #c82333;
+        }
+
+        /* Main Content Layout */
+        .main-content {
+            display: flex;
+            flex-grow: 1;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .left-panel, .center-panel, .right-panel {
+            background-color: #2a2a2a;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 20px; /* Space between form sections */
-            border-right: 1px solid #303050; /* Separator between forms and details */
-            overflow-y: auto; /* Allow scrolling if content overflows */
         }
 
-        .bottom-panel-left .section-title {
-            font-size: 1.1em;
-            font-weight: 500;
-            color: #e0e0e0;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #303050;
-            margin-bottom: 15px;
-        }
-        .bottom-panel-left .section-title span {
-            color: #ffcc00; /* Yellow for section titles */
+        .left-panel {
+            flex: 2; /* Takes more space */
         }
 
+        .center-panel {
+            flex: 1.5; /* Middle size */
+        }
+
+        .right-panel {
+            flex: 1; /* Smallest */
+        }
+
+        h3 {
+            color: #007bff;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3em;
+        }
+
+        /* Forms */
         .form-group {
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
 
         .form-group label {
             display: block;
             margin-bottom: 5px;
-            font-size: 0.8em;
-            color: #90a0c0;
+            color: #bbb;
         }
 
         .form-group input,
         .form-group select,
         .form-group textarea {
-            width: calc(100% - 20px); /* Adjust for padding */
+            width: calc(100% - 20px);
             padding: 8px 10px;
-            background-color: #303050; /* Darker input background */
-            border: 1px solid #404060;
+            border: 1px solid #444;
             border-radius: 4px;
-            color: #e0e0e0;
+            background-color: #333;
+            color: #eee;
             font-size: 0.9em;
         }
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #6080ff; /* Blue highlight on focus */
-            box-shadow: 0 0 0 2px rgba(96, 128, 255, 0.2);
-        }
 
-        textarea {
-            resize: vertical; /* Allow vertical resizing */
+        .form-group textarea {
+            resize: vertical;
             min-height: 60px;
+            max-height: 150px;
         }
 
-        .form-buttons {
+        .form-actions {
             display: flex;
             gap: 10px;
-            margin-top: 15px; /* Space above buttons */
-            padding-top: 15px;
-            border-top: 1px solid #303050;
-        }
-        .form-buttons button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        .form-buttons .btn-primary {
-            background-color: #007bff; /* Blue button */
-            color: white;
-        }
-        .form-buttons .btn-secondary {
-            background-color: #505070; /* Gray button */
-            color: #e0e0e0;
-        }
-        .form-buttons .btn-primary:hover { background-color: #0056b3; }
-        .form-buttons .btn-secondary:hover { background-color: #606080; }
-
-        /* Specific Styling for form sections in bottom-panel-left */
-        .unit-status-update-section .form-buttons,
-        .new-bolo-section .form-buttons,
-        .system-controls-section .form-buttons { /* Added system-controls */
-            margin-top: 10px;
-            border-top: none;
-            padding-top: 0;
-        }
-        .unit-status-update-section .section-title,
-        .new-bolo-section .section-title,
-        .system-controls-section .section-title { /* Added system-controls */
-            border-top: 1px solid #303050; /* Separator for these sections */
-            padding-top: 20px;
             margin-top: 20px;
         }
 
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+            white-space: nowrap; /* Prevent button text from wrapping */
+        }
 
-        /* Right Panel in Bottom Section (e.g., Event Details) */
-        .bottom-panel-right {
-            flex: 1.5; /* Takes more space than left form */
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .clear-all-button {
+            background-color: #ffc107;
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            margin-top: auto; /* Pushes button to bottom of the panel */
+            transition: background-color 0.3s ease;
+        }
+
+        .clear-all-button:hover {
+            background-color: #e0a800;
+        }
+
+        /* Active Calls Table */
+        .active-calls-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.85em;
+        }
+
+        .active-calls-table th,
+        .active-calls-table td {
+            border: 1px solid #444;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .active-calls-table th {
+            background-color: #333;
+            color: #add8e6;
+            font-weight: bold;
+        }
+
+        .active-calls-table tbody tr {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .active-calls-table tbody tr:hover {
+            background-color: #3a3a3a;
+        }
+
+        .active-calls-table tbody tr.active-row {
+            background-color: #0056b3; /* Highlight selected row */
+            color: white;
+        }
+
+        /* Active Units List */
+        .active-units-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .unit-item {
+            background-color: #333;
+            border: 1px solid #555;
+            border-radius: 5px;
+            padding: 8px 12px;
+            font-size: 0.9em;
+            white-space: nowrap;
+        }
+
+        .unit-id {
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        /* Active BOLOs List */
+        .active-bolos-list {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+            max-height: 300px; /* Example fixed height */
+            overflow-y: auto; /* Scroll if content overflows */
+            padding-right: 10px; /* Space for scrollbar */
+        }
+
+        .bolo-item {
+            background-color: #333;
+            border: 1px solid #555;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .bolo-id {
+            color: #ffc107;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .bolo-time {
+            color: #bbb;
+            font-size: 0.8em;
+        }
+
+        /* Event Details Panel */
+        .event-details-panel {
+            border: 1px solid #444;
+            border-radius: 5px;
             padding: 15px;
-            overflow-y: auto; /* Allow scrolling for event details if long */
+            margin-top: 20px;
+            background-color: #1e1e1e;
+            flex-grow: 1; /* Make it fill available space */
         }
 
         .detail-item {
             margin-bottom: 10px;
         }
+
         .detail-label {
-            font-size: 0.8em;
-            color: #90a0c0;
-            margin-bottom: 3px;
-            display: block;
-        }
-        .detail-value {
-            font-size: 0.95em;
-            color: #e0e0e0;
-            font-weight: 400;
-        }
-        .detail-value.important {
-            color: #ffcc00; /* Yellow for important values */
-            font-weight: 500;
+            font-weight: bold;
+            color: #add8e6;
+            margin-right: 5px;
         }
 
-        /* Utility/Helper Classes */
-        .text-muted {
-            color: #888;
-        }
-        .text-blue {
-            color: #70b0e0;
-        }
-        .text-red {
-            color: #e35d6a; /* A soft red */
-        }
         .status-badge {
             display: inline-block;
             padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.75em;
-            font-weight: 500;
-            text-transform: uppercase;
-        }
-        .status-badge.red {
-            background-color: rgba(227, 93, 106, 0.2);
-            color: #e35d6a;
-        }
-        .status-badge.green {
-            background-color: rgba(144, 238, 144, 0.2);
-            color: #90ee90;
-        }
-        .status-badge.blue {
-            background-color: rgba(100, 149, 237, 0.2);
-            color: #6495ed;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-left: 5px;
         }
 
-        /* Scrollbar Styling (Webkit - Chrome, Safari, Edge) */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px; /* For horizontal scrollbars */
+        .status-badge.green { background-color: #28a745; color: white; }
+        .status-badge.blue { background-color: #007bff; color: white; }
+        .status-badge.red { background-color: #dc3545; color: white; }
+
+        .event-detail-notes, .event-detail-history {
+            background-color: #222;
+            border: 1px solid #444;
+            padding: 10px;
+            border-radius: 4px;
+            min-height: 50px;
+            max-height: 150px;
+            overflow-y: auto;
+            color: #ccc;
         }
-        ::-webkit-scrollbar-track {
-            background: #282848;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #404060;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #505070;
+        .event-detail-notes p, .event-detail-history p {
+            margin: 0; /* Remove default paragraph margin */
         }
 
-        /* Custom Context Menu Styling */
-        #customContextMenu {
-            display: none; /* Hidden by default */
-            position: absolute;
-            background-color: #3a3a7a; /* Darker background for menu */
-            border: 1px solid #4a4a8a;
+        /* Custom Context Menu */
+        .custom-context-menu {
+            position: fixed;
+            background-color: #3a3a3a;
+            border: 1px solid #555;
             border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-            z-index: 1000; /* Ensure it's on top of everything */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 10;
             padding: 5px 0;
-            min-width: 180px;
+            min-width: 150px;
         }
 
-        #customContextMenu .menu-item {
+        .custom-context-menu ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .custom-context-menu li {
             padding: 8px 15px;
             cursor: pointer;
-            font-size: 0.9em;
-            color: #e0e0e0;
+            color: #eee;
         }
 
-        #customContextMenu .menu-item:hover {
-            background-color: #4a4a8a; /* Hover effect for menu items */
-        }
-
-        /* Loading Overlay */
-        #loadingOverlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent black */
+        .custom-context-menu li:hover {
+            background-color: #007bff;
             color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 2em;
-            z-index: 2000; /* Above everything else */
-            transition: opacity 0.5s ease-out;
-            opacity: 1;
         }
-        #loadingOverlay.hidden {
-            opacity: 0;
-            pointer-events: none; /* Allows clicks to pass through when hidden */
+
+        /* Admin Panel */
+        .admin-panel-container {
+            background-color: #2a2a2a; /* Darker background for the panel */
+            border: 1px solid #444;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            overflow: hidden; /* Ensures content doesn't overflow rounded corners */
+        }
+
+        .admin-panel-header {
+            background-color: #333; /* Slightly lighter header */
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #444;
+        }
+
+        .admin-panel-header:hover {
+            background-color: #444;
+        }
+
+        .admin-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #eee;
+        }
+
+        .admin-toggle-icon {
+            font-size: 1.5em;
+            color: #bbb;
+            transition: transform 0.3s ease;
+        }
+
+        .admin-panel-header.active .admin-toggle-icon {
+            transform: rotate(180deg); /* Rotate up arrow when active */
+        }
+
+        .admin-panel-content {
+            padding: 20px;
+            border-top: none; /* No top border, it's covered by header border-bottom */
+            background-color: #1e1e1e; /* Even darker background for content */
+        }
+
+        .admin-section {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #333;
+        }
+
+        .admin-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .admin-section h4 {
+            color: #90ee90; /* Green for section titles */
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .admin-section h5 {
+            color: #add8e6; /* Light blue for sub-titles */
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .admin-panel-container .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-panel-container .form-group label {
+            color: #bbb;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .admin-panel-container .form-group input[type="text"],
+        .admin-panel-container .form-group input[type="password"] {
+            background-color: #333;
+            border: 1px solid #555;
+            color: #eee;
+            padding: 8px 10px;
+            border-radius: 4px;
+            font-size: 0.95em;
+        }
+
+        .admin-panel-container .form-group input[type="text"]::placeholder,
+        .admin-panel-container .form-group input[type="password"]::placeholder {
+            color: #888;
+        }
+
+        .admin-panel-container .btn {
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-right: 10px; /* Space between buttons */
+            margin-top: 10px; /* Space above buttons */
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .admin-panel-container .btn-primary {
+            background-color: #007bff;
+            color: white;
+            border: 1px solid #007bff;
+        }
+
+        .admin-panel-container .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+
+        .admin-panel-container .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+            border: 1px solid #6c757d;
+        }
+
+        .admin-panel-container .btn-secondary:hover {
+            background-color: #5a6268;
+            border-color: #545b62;
+        }
+
+        .admin-panel-container .btn-danger {
+            background-color: #dc3545;
+            color: white;
+            border: 1px solid #dc3545;
+        }
+
+        .admin-panel-container .btn-danger:hover {
+            background-color: #c82333;
+            border-color: #bd2130;
+        }
+
+        .admin-panel-container .list-group {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+        }
+
+        .admin-panel-container .list-group-item {
+            background-color: #282828;
+            border: 1px solid #444;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            color: #eee;
+            font-size: 0.95em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-panel-container .list-group-item.selected-user {
+            background-color: #0056b3; /* Highlight selected user */
+            border-color: #007bff;
+        }
+
+        .admin-panel-container .message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: white; /* Default white for messages */
+        }
+
+        .admin-panel-container .message.success {
+            background-color: #28a745; /* Green for success */
+        }
+
+        .admin-panel-container .message.error {
+            background-color: #dc3545; /* Red for error */
+        }
+
+        .admin-panel-container .user-item-actions button {
+            background: none;
+            border: none;
+            color: #bbb;
+            font-size: 0.9em;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .admin-panel-container .user-item-actions button:hover {
+            text-decoration: underline;
+            color: #eee;
         }
 
     </style>
 </head>
 <body>
-    <div id="loginContainer" style="
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: #1a1a2e; /* Match body background */
-        color: #e0e0e0;
-        display: flex; /* Hidden by JS initially */
-        justify-content: center;
-        align-items: center;
-        z-index: 2001; /* Higher than loading overlay */
-    ">
-        <div class="login-box" style="
-            background-color: #20203a;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-            text-align: center;
-            width: 350px;
-        ">
-            <h2 style="color: #ffcc00; margin-bottom: 25px;">CAD System Login</h2>
-            <div class="form-group" style="margin-bottom: 20px; text-align: left;">
-                <label for="usernameInput" style="display: block; margin-bottom: 8px; font-size: 0.9em; color: #90a0c0;">USERNAME</label>
-                <input type="text" id="usernameInput" placeholder="Enter username" style="
-                    width: calc(100% - 20px);
-                    padding: 12px 10px;
-                    background-color: #303050;
-                    border: 1px solid #404060;
-                    border-radius: 4px;
-                    color: #e0e0e0;
-                    font-size: 1em;
-                ">
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="login-container" id="loginContainer">
+        <div class="login-box">
+            <h2>WV Dispatch Login</h2>
+            <div class="input-group">
+                <label for="usernameInput">Username:</label>
+                <input type="text" id="usernameInput" placeholder="Enter username">
             </div>
-            <div class="form-group" style="margin-bottom: 25px; text-align: left;">
-                <label for="passwordInput" style="display: block; margin-bottom: 8px; font-size: 0.9em; color: #90a0c0;">PASSWORD</label>
-                <input type="password" id="passwordInput" placeholder="Enter password" style="
-                    width: calc(100% - 20px);
-                    padding: 12px 10px;
-                    background-color: #303050;
-                    border: 1px solid #404060;
-                    border-radius: 4px;
-                    color: #e0e0e0;
-                    font-size: 1em;
-                ">
+            <div class="input-group">
+                <label for="passwordInput">Password:</label>
+                <input type="password" id="passwordInput" placeholder="Enter password">
             </div>
-            <button id="loginButton" style="
-                width: 100%;
-                padding: 12px 20px;
-                background-color: #007bff;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 1.1em;
-                font-weight: 500;
-                transition: background-color 0.2s ease;
-            ">LOGIN</button>
-            <div id="loginMessage" style="color: #e35d6a; margin-top: 15px; font-size: 0.9em;"></div>
+            <button id="loginButton">Login</button>
+            <p id="loginMessage" class="login-message"></p>
         </div>
     </div>
 
-    <div id="loadingOverlay">
-        Loading Data...
-    </div>
+    <div class="dashboard-container" id="dashboardContainer">
+        <header>
+            <div class="top-left-logo" id="topLeftLogo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Seal_of_West_Virginia.svg/1200px-Seal_of_West_Virginia.svg.png" alt="West Virginia Seal">
+            </div>
+            <div class="top-right-info" id="topRightInfo">
+                <span class="location-time" id="locationTime"></span>
+                <span class="user-status">User: **Dispatcher** | Status: **On Duty**</span>
+                <button id="logoutButton">Logout</button>
+            </div>
+        </header>
 
-    <img src="https://media.discordapp.net/attachments/1228141326965411920/1320980715629711381/ca7eeba99227fd35efd8e37416a1680b_1.png?ex=686809e9&is=6866b869&hm=641822dd533a74995556d7f9dc2c6bd76ea3b78266177957ddda38b68cc57f56&=&format=webp&quality=lossless" alt="Logo" class="top-left-logo">
-    
-    <div class="top-right-info">
-        <span class="top-right-version">0.0.5V</span>
-        <span class="top-right-countdown" id="updateCountdownDisplay">Update 0.0.7V: Loading...</span>
-    </div>
-
-    <div class="dashboard-container">
-        <div class="top-section">
-            <div class="top-panel-left">
-                <div class="panel-header">
-                    <span>ACTIVE CALLS (<span id="activeCallsCount">0</span>)</span>
-                    <span class="text-muted">FILTERS</span>
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="admin-panel-container">
+                    <div class="admin-panel-header" id="adminPanelHeader">
+                        <span class="admin-title">Admin Panel</span>
+                        <span class="admin-toggle-icon">&#9660;</span> </div>
+                    <div class="admin-panel-content" id="adminPanelContent" style="display: none;">
+                        <div class="admin-section">
+                            <h4>Manage User Accounts</h4>
+                            <div class="form-group">
+                                <label for="newAdminUsername">New Username:</label>
+                                <input type="text" id="newAdminUsername" placeholder="Enter new username">
+                            </div>
+                            <div class="form-group">
+                                <label for="newAdminPassword">New Password:</label>
+                                <input type="password" id="newAdminPassword" placeholder="Enter new password">
+                            </div>
+                            <button id="addAdminUserBtn" class="btn btn-primary">Add User</button>
+                            <button id="updateAdminUserBtn" class="btn btn-secondary">Update User</button>
+                            <button id="removeAdminUserBtn" class="btn btn-danger">Remove User</button>
+                            <div id="adminUserMessage" class="message"></div>
+                            
+                            <h5>Existing Users:</h5>
+                            <ul id="adminUsersList" class="list-group">
+                                </ul>
+                        </div>
+                    </div>
                 </div>
-                <div class="panel-content">
-                    <table class="data-table">
+
+                <h3>New Call Entry</h3>
+                <div class="form-group">
+                    <label for="newCallType">Call Type:</label>
+                    <input type="text" id="newCallType" placeholder="e.g., Assault, Traffic Stop">
+                </div>
+                <div class="form-group">
+                    <label for="newCallAddress">Address:</label>
+                    <input type="text" id="newCallAddress" placeholder="e.g., 123 Main St, Anytown WV">
+                </div>
+                <div class="form-group">
+                    <label for="newCallDetails">Details:</label>
+                    <textarea id="newCallDetails" placeholder="Brief description of the incident..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="newCallPriority">Priority:</label>
+                    <select id="newCallPriority">
+                        <option value="LOW">LOW</option>
+                        <option value="MEDIUM">MEDIUM</option>
+                        <option value="HIGH">HIGH</option>
+                        <option value="CRITICAL">CRITICAL</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="newCallAssignedUnit">Assigned Unit(s):</label>
+                    <input type="text" id="newCallAssignedUnit" placeholder="e.g., 201, 205 (comma separated)">
+                </div>
+                <div class="form-actions">
+                    <button id="submitNewCallBtn" class="btn btn-primary">Submit Call</button>
+                    <button id="clearNewCallFormBtn" class="btn btn-secondary">Clear Form</button>
+                </div>
+            </div>
+
+            <div class="center-panel">
+                <h3>Active Calls (<span id="activeCallsCount">0</span>)</h3>
+                <div style="overflow-x: auto; max-height: 400px;">
+                    <table class="active-calls-table">
                         <thead>
                             <tr>
-                                <th>#</th>
-                                <th>TYPE</th>
-                                <th>PRIORITY</th>
-                                <th>ADDRESS</th>
-                                <th>NOTES</th>
-                                <th>TIME</th>
-                                <th>UNIT</th>
+                                <th>ID</th>
+                                <th>Type</th>
+                                <th>Priority</th>
+                                <th>Address</th>
+                                <th>Details</th>
+                                <th>Time</th>
+                                <th>Unit</th>
                             </tr>
                         </thead>
                         <tbody id="activeCallsTableBody">
                             </tbody>
                     </table>
                 </div>
+
+                <h3 style="margin-top: 30px;">Active Units</h3>
+                <div class="active-units-list" id="activeUnitsList">
+                    </div>
+
+                <h3 style="margin-top: 30px;">Update Unit Status</h3>
+                <div class="form-group">
+                    <label for="unitCallsignInput">Unit Callsign:</label>
+                    <input type="text" id="unitCallsignInput" placeholder="e.g., 201">
+                </div>
+                <div class="form-group">
+                    <label for="unitStatusSelect">Status:</label>
+                    <select id="unitStatusSelect">
+                        <option value="Available">Available</option>
+                        <option value="On Scene">On Scene</option>
+                        <option value="En Route">En Route</option>
+                        <option value="Busy">Busy</option>
+                        <option value="Out of Service">Out of Service</option>
+                    </select>
+                </div>
+                <button id="updateUnitStatusBtn" class="btn btn-primary">Update Status</button>
             </div>
 
-            <div class="top-panel-middle">
-                <div class="panel-header">
-                    <span>ACTIVE UNITS</span>
+            <div class="right-panel">
+                <h3>New BOLO (<span id="activeBolosCount">0</span>)</h3>
+                <div class="form-group">
+                    <label for="boloUnitCallsignInput">Unit/BOLO ID:</label>
+                    <input type="text" id="boloUnitCallsignInput" placeholder="e.g., Vehicle: ABC123, Person: John Doe">
                 </div>
-                <div class="panel-content unit-list" id="activeUnitsList">
-                    </div>
-            </div>
-
-            <div class="top-panel-right">
-                <div class="panel-header">
-                    <span>ACTIVE BOLOS (<span id="activeBolosCount">0</span>)</span>
+                <div class="form-group">
+                    <label for="boloDescriptionTextarea">Description:</label>
+                    <textarea id="boloDescriptionTextarea" placeholder="Detailed description of BOLO..."></textarea>
                 </div>
-                <div class="panel-content bolo-list" id="activeBolosList">
-                    </div>
-            </div>
-        </div>
-
-        <div class="bottom-section">
-            <div class="bottom-panel-left">
-                <div class="new-event-section">
-                    <div class="section-title">
-                        <span>NEW CALL</span>
-                    </div>
-                    <div class="form-group">
-                        <label for="newCallType">EVENT TYPE</label>
-                        <select id="newCallType">
-                            <option value="">SELECT</option>
-                            <option value="MEDICAL">MEDICAL</option>
-                            <option value="FIRE">FIRE</option>
-                            <option value="POLICE">POLICE</option>
-                            <option value="RADIO TRAFFIC">RADIO TRAFFIC</option> <option value="OTHER">OTHER</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="newCallAddress">ADDRESS</label>
-                        <input type="text" id="newCallAddress" placeholder="Enter address...">
-                    </div>
-                    <div class="form-group">
-                        <label for="newCallDetails">DETAILS</label>
-                        <textarea id="newCallDetails" placeholder="Provide event details..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="newCallPriority">PRIORITY</label>
-                        <select id="newCallPriority">
-                            <option value="LOW">LOW</option>
-                            <option value="MEDIUM">MEDIUM</option>
-                            <option value="HIGH">HIGH</option>
-                            <option value="CRITICAL">CRITICAL</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="newCallAssignedUnit">ASSIGN TO UNIT</label>
-                        <input type="text" id="newCallAssignedUnit" placeholder="Unit ID or search...">
-                    </div>
-                    <div class="form-buttons">
-                        <button class="btn-primary" id="submitNewCall">SUBMIT CALL</button>
-                        <button class="btn-secondary" id="clearNewCallForm">CLEAR FORM</button>
-                    </div>
+                <div class="form-actions">
+                    <button id="submitNewBoloBtn" class="btn btn-primary">Submit BOLO</button>
+                    <button id="clearNewBoloFormBtn" class="btn btn-secondary">Clear Form</button>
                 </div>
 
-                <div class="unit-status-update-section">
-                    <div class="section-title">
-                        <span>UNIT STATUS UPDATE</span>
+                <h3 style="margin-top: 30px;">Active BOLOs</h3>
+                <div class="active-bolos-list" id="activeBolosList">
                     </div>
-                    <div class="form-group">
-                        <label for="unitCallsignInput">UNIT CALLSIGN</label>
-                        <input type="text" id="unitCallsignInput" placeholder="e.g., E101, P205">
-                    </div>
-                    <div class="form-group">
-                        <label for="unitStatusSelect">STATUS</label>
-                        <select id="unitStatusSelect">
-                            <option value="">SELECT STATUS</option>
-                            <option value="10-6 Busy">10-6 Busy</option>
-                            <option value="10-7 Out of Service">10-7 Out of Service</option>
-                            <option value="10-8 In Service">10-8 In Service</option>
-                        </select>
-                    </div>
-                    <div class="form-buttons">
-                        <button class="btn-primary" id="updateUnitStatus">UPDATE STATUS</button>
-                    </div>
-                </div>
 
-                <div class="new-bolo-section">
-                    <div class="section-title">
-                        <span>NEW BOLO</span>
+                <h3 style="margin-top: 30px;">Event Details: <span id="eventDetailHeader">#SELECT CALL</span></h3>
+                <div class="event-details-panel">
+                    <div class="detail-item"><span class="detail-label">Type:</span> <span id="eventDetailType">N/A</span></div>
+                    <div class="detail-item"><span class="detail-label">Location:</span> <span id="eventDetailLocation">N/A</span></div>
+                    <div class="detail-item">
+                        <span class="detail-label">Status:</span>
+                        <span id="eventDetailStatus" class="status-badge">N/A</span>
                     </div>
-                    <div class="form-group">
-                        <label for="boloUnitCallsign">UNIT/BOLO ID</label>
-                        <input type="text" id="boloUnitCallsign" placeholder="e.g., Car, Person, Unit A1">
+                    <div class="detail-item"><span class="detail-label">Assigned Unit(s):</span> <span id="eventDetailAssignedUnits">N/A</span></div>
+                    <div class="detail-item"><span class="detail-label">Dispatched Time:</span> <span id="eventDetailDispatchedTime">N/A</span></div>
+                    <div class="detail-item"><span class="detail-label">Caller:</span> <span id="eventDetailCaller">N/A</span></div>
+                    <div class="detail-item">
+                        <span class="detail-label">Notes:</span>
+                        <div class="event-detail-notes" id="eventDetailNotes"></div>
                     </div>
-                    <div class="form-group">
-                        <label for="boloDescription">DESCRIPTION</label>
-                        <textarea id="boloDescription" placeholder="Detailed description of BOLO..."></textarea>
-                    </div>
-                    <div class="form-buttons">
-                        <button class="btn-primary" id="submitNewBolo">SUBMIT BOLO</button>
-                        <button class="btn-secondary" id="clearNewBoloForm">CLEAR FORM</button>
-                    </div>
-                </div>
-
-                <div class="system-controls-section">
-                    <div class="section-title">
-                        <span>SYSTEM CONTROLS</span>
-                    </div>
-                    <div class="form-buttons">
-                        <button class="btn-primary" id="clearAllButton">CLEAR ALL LOGS</button>
-                        <button class="btn-secondary" id="logoutButton">LOGOUT</button> </div>
-                </div>
-            </div>
-
-            <div class="bottom-panel-right">
-                <div class="panel-header">
-                    <span id="eventDetailHeader">Event Details</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">INCIDENT TYPE</span>
-                    <span class="detail-value" id="eventDetailType">N/A</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">LOCATION</span>
-                    <span class="detail-value" id="eventDetailLocation">N/A</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">CALLER INFO</span>
-                    <span class="detail-value" id="eventDetailCaller">N/A</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">STATUS</span>
-                    <span class="detail-value"><span class="status-badge red" id="eventDetailStatus">N/A</span></span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">ASSIGNED UNIT(S)</span>
-                    <span class="detail-value" id="eventDetailAssignedUnits">N/A</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">DISPATCHED AT</span>
-                    <span class="detail-value" id="eventDetailDispatchedTime">N/A</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">NOTES</span>
-                    <span class="detail-value" id="eventDetailNotes">N/A</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">CAD HISTORY</span>
-                    <div class="detail-value" id="eventDetailHistory">
-                        <p>No event selected.</p>
+                    <div class="detail-item">
+                        <span class="detail-label">History:</span>
+                        <div class="event-detail-history" id="eventDetailHistory"></div>
                     </div>
                 </div>
+                <button id="clearAllButton" class="clear-all-button">Clear All Logs & Data</button>
             </div>
         </div>
     </div>
 
-    <div id="customContextMenu">
-        <div class="menu-item" id="removeActiveCallMenuItem">Remove Active Call</div>
+    <div class="custom-context-menu" id="customContextMenu">
+        <ul>
+            <li id="removeActiveCallMenuItem">Remove Call</li>
+            </ul>
     </div>
 
     <script>
-        // --- Data Structures (for single-user persistence via localStorage) ---
-        let activeCallsData = [];
-        let activeUnitsData = [];
-        let activeBolosData = [];
-
-        // --- Get references to HTML elements ---
-
-        // Login System Elements
+        // DOM Elements - Get references once the DOM is loaded
+        const loadingOverlay = document.getElementById('loadingOverlay');
         const loginContainer = document.getElementById('loginContainer');
+        const dashboardContainer = document.getElementById('dashboardContainer');
         const usernameInput = document.getElementById('usernameInput');
         const passwordInput = document.getElementById('passwordInput');
         const loginButton = document.getElementById('loginButton');
         const loginMessage = document.getElementById('loginMessage');
+        const logoutButton = document.getElementById('logoutButton');
 
-        // Dashboard Elements to toggle visibility
-        const dashboardContainer = document.querySelector('.dashboard-container');
-        const topLeftLogo = document.querySelector('.top-left-logo');
-        const topRightInfo = document.querySelector('.top-right-info');
+        const topLeftLogo = document.getElementById('topLeftLogo');
+        const topRightInfo = document.getElementById('topRightInfo');
+        const locationTime = document.getElementById('locationTime');
 
-        // Hardcoded credentials (INSECURE FOR PRODUCTION!)
-        const VALID_USERNAME = 'C-100';
-        const VALID_PASSWORD = '1234321'; // CHANGE THIS PASSWORD!
-
-        // Active Calls Table
-        const activeCallsTableBody = document.getElementById('activeCallsTableBody');
-        const activeCallsCountSpan = document.getElementById('activeCallsCount');
-        let callCounter = 0; 
-
-        // New Call Form Elements
         const newCallType = document.getElementById('newCallType');
         const newCallAddress = document.getElementById('newCallAddress');
         const newCallDetails = document.getElementById('newCallDetails');
         const newCallPriority = document.getElementById('newCallPriority');
         const newCallAssignedUnit = document.getElementById('newCallAssignedUnit');
-        const submitNewCallBtn = document.getElementById('submitNewCall');
-        const clearNewCallFormBtn = document.getElementById('clearNewCallForm');
+        const submitNewCallBtn = document.getElementById('submitNewCallBtn');
+        const clearNewCallFormBtn = document.getElementById('clearNewCallFormBtn');
 
-        // Active Units List
+        const activeCallsCount = document.getElementById('activeCallsCount');
+        const activeCallsTableBody = document.getElementById('activeCallsTableBody');
+
         const activeUnitsList = document.getElementById('activeUnitsList');
-
-        // Unit Status Update Form Elements
         const unitCallsignInput = document.getElementById('unitCallsignInput');
         const unitStatusSelect = document.getElementById('unitStatusSelect');
-        const updateUnitStatusBtn = document.getElementById('updateUnitStatus');
+        const updateUnitStatusBtn = document.getElementById('updateUnitStatusBtn');
 
-        // Active BOLOs List
+        const activeBolosCount = document.getElementById('activeBolosCount');
+        const boloUnitCallsignInput = document.getElementById('boloUnitCallsignInput');
+        const boloDescriptionTextarea = document.getElementById('boloDescriptionTextarea');
+        const submitNewBoloBtn = document.getElementById('submitNewBoloBtn');
+        const clearNewBoloFormBtn = document.getElementById('clearNewBoloFormBtn');
         const activeBolosList = document.getElementById('activeBolosList');
-        const activeBolosCountSpan = document.getElementById('activeBolosCount');
-        let boloCounter = 0; 
 
-        // New BOLO Form Elements
-        const boloUnitCallsignInput = document.getElementById('boloUnitCallsign');
-        const boloDescriptionTextarea = document.getElementById('boloDescription');
-        const submitNewBoloBtn = document.getElementById('submitNewBolo');
-        const clearNewBoloFormBtn = document.getElementById('clearNewBoloForm');
-
-        // Event Details Panel Elements
         const eventDetailHeader = document.getElementById('eventDetailHeader');
         const eventDetailType = document.getElementById('eventDetailType');
         const eventDetailLocation = document.getElementById('eventDetailLocation');
-        const eventDetailCaller = document.getElementById('eventDetailCaller');
         const eventDetailStatus = document.getElementById('eventDetailStatus');
         const eventDetailAssignedUnits = document.getElementById('eventDetailAssignedUnits');
         const eventDetailDispatchedTime = document.getElementById('eventDetailDispatchedTime');
+        const eventDetailCaller = document.getElementById('eventDetailCaller');
         const eventDetailNotes = document.getElementById('eventDetailNotes');
         const eventDetailHistory = document.getElementById('eventDetailHistory');
 
-        // Custom Context Menu Elements
         const customContextMenu = document.getElementById('customContextMenu');
         const removeActiveCallMenuItem = document.getElementById('removeActiveCallMenuItem');
-        let rightClickedRow = null; 
+        let rightClickedRow = null; // To store the row that was right-clicked
 
-        // Countdown Timer Elements
-        const updateCountdownDisplay = document.getElementById('updateCountdownDisplay');
-
-        // System Controls
         const clearAllButton = document.getElementById('clearAllButton');
-        const logoutButton = document.getElementById('logoutButton'); // Reference for the new logout button
 
-        // Loading Overlay
-        const loadingOverlay = document.getElementById('loadingOverlay');
+        // Admin Panel Constants
+        const ADMIN_PANEL_CODE = "ABC 123"; // The code to access the admin panel
 
-        // --- Functions to update display counts ---
+        // DOM Elements for Admin Panel
+        const adminPanelHeader = document.getElementById('adminPanelHeader');
+        const adminPanelContent = document.getElementById('adminPanelContent');
+        const newAdminUsernameInput = document.getElementById('newAdminUsername');
+        const newAdminPasswordInput = document.getElementById('newAdminPassword');
+        const addAdminUserBtn = document.getElementById('addAdminUserBtn');
+        const updateAdminUserBtn = document.getElementById('updateAdminUserBtn');
+        const removeAdminUserBtn = document.getElementById('removeAdminUserBtn');
+        const adminUserMessage = document.getElementById('adminUserMessage');
+        const adminUsersList = document.getElementById('adminUsersList');
+
+        // Global data arrays and counters
+        let activeCallsData = [];
+        let activeUnitsData = [];
+        let activeBolosData = [];
+        let callCounter = 0;
+        let boloCounter = 0;
+
+        // Global variable for storing user accounts (replace VALID_USERNAME/PASSWORD)
+        let userAccounts = [
+            { username: "dispatcher", password: "password123" } // Initial default user
+        ];
+
+        // Variable to hold the currently selected user in the admin panel
+        let selectedAdminUser = null;
+
+
+        // --- Utility Functions ---
+        function updateLocationTime() {
+            const now = new Date();
+            // Format time as HH:MM:SS
+            const timeString = now.toLocaleTimeString('en-US', { hour12: false });
+            // Get the current date in a readable format
+            const dateString = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            locationTime.textContent = `Huntington, WV | ${timeString} | ${dateString}`;
+        }
+        // Update time every second
+        setInterval(updateLocationTime, 1000);
+        // Initial call to display time immediately
+        updateLocationTime();
 
         function updateActiveCallsCount() {
-            activeCallsCountSpan.textContent = activeCallsData.length;
+            activeCallsCount.textContent = activeCallsData.length;
         }
 
         function updateActiveBolosCount() {
-            activeBolosCountSpan.textContent = activeBolosData.length;
+            activeBolosCount.textContent = activeBolosData.length;
         }
 
         function clearEventDetailsPanel() {
-            eventDetailHeader.textContent = 'Event Details';
+            eventDetailHeader.textContent = '#SELECT CALL';
             eventDetailType.textContent = 'N/A';
             eventDetailLocation.textContent = 'N/A';
-            eventDetailCaller.textContent = 'N/A';
             eventDetailStatus.textContent = 'N/A';
-            eventDetailStatus.className = 'status-badge'; 
+            eventDetailStatus.className = 'status-badge'; // Reset class
             eventDetailAssignedUnits.innerHTML = 'N/A';
             eventDetailDispatchedTime.textContent = 'N/A';
-            eventDetailNotes.textContent = 'N/A';
-            eventDetailHistory.innerHTML = '<p>No event selected.</p>';
+            eventDetailCaller.textContent = 'N/A';
+            eventDetailNotes.textContent = '';
+            eventDetailHistory.innerHTML = '';
+            // Remove active class from any previously selected row
+            activeCallsTableBody.querySelectorAll('tr').forEach(r => r.classList.remove('active-row'));
         }
 
-        // --- Data Persistence (localStorage for single user) ---
+        // --- Data Persistence (localStorage) ---
         function saveAllData() {
             localStorage.setItem('activeCallsData', JSON.stringify(activeCallsData));
             localStorage.setItem('activeUnitsData', JSON.stringify(activeUnitsData));
             localStorage.setItem('activeBolosData', JSON.stringify(activeBolosData));
             localStorage.setItem('callCounter', callCounter);
             localStorage.setItem('boloCounter', boloCounter);
+            localStorage.setItem('userAccounts', JSON.stringify(userAccounts)); // Save user accounts
             console.log("Data saved to localStorage.");
         }
 
@@ -849,8 +1014,19 @@
                 activeBolosData.forEach(bolo => addBoloToDisplay(bolo, false)); // Re-add to DOM, don't save again
             }
 
+            // Counters
             callCounter = parseInt(localStorage.getItem('callCounter') || '0');
             boloCounter = parseInt(localStorage.getItem('boloCounter') || '0');
+
+            // User Accounts
+            const storedUserAccounts = localStorage.getItem('userAccounts');
+            if (storedUserAccounts) {
+                userAccounts = JSON.parse(storedUserAccounts);
+                displayAdminUsers(); // Display users after loading
+            } else {
+                // If no user accounts are stored, use the initial default one and save it
+                saveAllData(); 
+            }
 
             updateActiveCallsCount();
             updateActiveBolosCount();
@@ -927,33 +1103,84 @@
             updateActiveBolosCount(); 
         }
 
-        // --- Countdown Timer Logic ---
-        function startCountdown() {
-            // Target date: 7 days from current time (Friday, July 4, 2025, 1:10:50 PM EDT + 7 days)
-            // For a real release, this date would be set in stone or fetched from a server.
-            const targetDate = new Date("July 11, 2025 13:10:50 EDT").getTime(); // Adjust this exact time as needed
+        // --- Admin Panel Functions ---
 
-            const countdownInterval = setInterval(() => {
-                const now = new Date().getTime();
-                const distance = targetDate - now;
+        function displayAdminUsers() {
+            adminUsersList.innerHTML = ''; // Clear current list
+            userAccounts.forEach(user => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('list-group-item');
+                listItem.setAttribute('data-username', user.username);
+                listItem.innerHTML = `
+                    <span>${user.username}</span>
+                    <div class="user-item-actions">
+                        <button class="select-user-btn" data-username="${user.username}">Select</button>
+                    </div>
+                `;
+                adminUsersList.appendChild(listItem);
+            });
+        }
 
-                if (distance < 0) {
-                    clearInterval(countdownInterval);
-                    updateCountdownDisplay.textContent = "Update 0.0.7V: LAUNCHED!";
-                    updateCountdownDisplay.style.color = '#90ee90'; // Green for launched
+        function showAdminMessage(message, type = 'info') {
+            adminUserMessage.textContent = message;
+            adminUserMessage.className = 'message'; // Reset classes
+            adminUserMessage.classList.add(type); // Add success or error
+            setTimeout(() => {
+                adminUserMessage.textContent = '';
+                adminUserMessage.className = 'message';
+            }, 3000); // Message disappears after 3 seconds
+        }
+
+        // Function to handle adding/updating/removing users
+        function handleUserAction(actionType) {
+            const username = newAdminUsernameInput.value.trim();
+            const password = newAdminPasswordInput.value.trim();
+
+            if (actionType !== 'remove' && (!username || !password)) {
+                showAdminMessage('Username and password are required.', 'error');
+                return;
+            }
+            
+            if (actionType === 'add') {
+                const existingUser = userAccounts.find(u => u.username === username);
+                if (existingUser) {
+                    showAdminMessage('Username already exists.', 'error');
                     return;
                 }
+                userAccounts.push({ username, password });
+                showAdminMessage('User added successfully!', 'success');
+            } else if (actionType === 'update') {
+                if (!selectedAdminUser) {
+                    showAdminMessage('Please select a user to update.', 'error');
+                    return;
+                }
+                const userIndex = userAccounts.findIndex(u => u.username === selectedAdminUser.username);
+                if (userIndex > -1) {
+                    userAccounts[userIndex] = { username: username, password: password };
+                    showAdminMessage('User updated successfully!', 'success');
+                    selectedAdminUser = null; // Deselect after update
+                } else {
+                    showAdminMessage('Selected user not found.', 'error');
+                }
+            } else if (actionType === 'remove') {
+                if (!selectedAdminUser) {
+                    showAdminMessage('Please select a user to remove.', 'error');
+                    return;
+                }
+                if (userAccounts.length === 1) {
+                    showAdminMessage('Cannot remove the last user account.', 'error');
+                    return;
+                }
+                userAccounts = userAccounts.filter(u => u.username !== selectedAdminUser.username);
+                showAdminMessage('User removed successfully!', 'success');
+                selectedAdminUser = null; // Deselect after removal
+            }
 
-                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                // Pad with leading zeros
-                const format = (num) => String(num).padStart(2, '0');
-
-                updateCountdownDisplay.textContent = `Update 0.0.7V: ${format(days)}d ${format(hours)}h ${format(minutes)}m ${format(seconds)}s`;
-            }, 1000); 
+            saveAllData(); // Save changes to localStorage
+            displayAdminUsers(); // Refresh the list
+            newAdminUsernameInput.value = '';
+            newAdminPasswordInput.value = '';
+            adminUsersList.querySelectorAll('.list-group-item').forEach(item => item.classList.remove('selected-user'));
         }
 
 
@@ -1136,7 +1363,7 @@
         // --- Clear All Logs Functionality ---
         clearAllButton.addEventListener('click', () => {
             if (confirm('Are you sure you want to clear all active calls, units, and BOLOs? This action cannot be undone.')) {
-                clearAllLogs(true); // Pass true to also clear login status if desired, or false to remain logged in
+                clearAllLogs(false); // Pass false to remain logged in after clearing data
             }
         });
 
@@ -1155,12 +1382,21 @@
             callCounter = 0;
             boloCounter = 0;
 
-            // Clear localStorage, but conditionally keep 'isLoggedIn'
+            // Clear localStorage, but conditionally keep 'isLoggedIn' and 'userAccounts'
             const isLoggedInStatus = localStorage.getItem('isLoggedIn');
+            const currentUserAccounts = localStorage.getItem('userAccounts'); // Temporarily store user accounts
             localStorage.clear();
+
             if (!shouldClearLogin && isLoggedInStatus) { // If we shouldn't clear login, restore it
                 localStorage.setItem('isLoggedIn', isLoggedInStatus);
             }
+            if (currentUserAccounts) { // Always restore user accounts if they exist (unless explicitly logging out)
+                localStorage.setItem('userAccounts', currentUserAccounts);
+            } else { // If userAccounts were cleared or never existed, re-initialize with default
+                userAccounts = [{ username: "dispatcher", password: "password123" }];
+                localStorage.setItem('userAccounts', JSON.stringify(userAccounts));
+            }
+
 
             // Update display counts
             updateActiveCallsCount();
@@ -1181,6 +1417,7 @@
             boloDescriptionTextarea.value = '';
 
             console.log("All logs and data cleared.");
+            displayAdminUsers(); // Refresh admin user list in case something changed
         }
 
 
@@ -1207,7 +1444,10 @@
             const enteredUsername = usernameInput.value;
             const enteredPassword = passwordInput.value;
 
-            if (enteredUsername === VALID_USERNAME && enteredPassword === VALID_PASSWORD) {
+            // Find the user in the userAccounts array
+            const user = userAccounts.find(u => u.username === enteredUsername && u.password === enteredPassword);
+
+            if (user) {
                 localStorage.setItem('isLoggedIn', 'true'); // Set a flag in local storage
                 loginMessage.textContent = '';
                 usernameInput.value = '';
@@ -1247,6 +1487,50 @@
             logoutButton.addEventListener('click', performLogout);
         }
 
+        // --- Event Listeners for Admin Panel ---
+
+        adminPanelHeader.addEventListener('click', () => {
+            // Prompt for the admin code before showing the panel content
+            const enteredCode = prompt("Enter Admin Code:");
+            if (enteredCode === ADMIN_PANEL_CODE) {
+                if (adminPanelContent.style.display === 'none') {
+                    adminPanelContent.style.display = 'block';
+                    adminPanelHeader.classList.add('active'); // For arrow rotation
+                    displayAdminUsers(); // Load users when panel opens
+                } else {
+                    adminPanelContent.style.display = 'none';
+                    adminPanelHeader.classList.remove('active');
+                    selectedAdminUser = null; // Clear selection when panel closes
+                    adminUsersList.querySelectorAll('.list-group-item').forEach(item => item.classList.remove('selected-user'));
+                }
+            } else if (enteredCode !== null) { // If user didn't cancel
+                alert("Incorrect Admin Code.");
+            }
+        });
+
+        addAdminUserBtn.addEventListener('click', () => handleUserAction('add'));
+        updateAdminUserBtn.addEventListener('click', () => handleUserAction('update'));
+        removeAdminUserBtn.addEventListener('click', () => handleUserAction('remove'));
+
+        adminUsersList.addEventListener('click', (event) => {
+            const listItem = event.target.closest('.list-group-item');
+            if (listItem) {
+                // Clear previous selection
+                adminUsersList.querySelectorAll('.list-group-item').forEach(item => item.classList.remove('selected-user'));
+                
+                // Select the new item
+                listItem.classList.add('selected-user');
+                
+                const usernameToSelect = listItem.getAttribute('data-username');
+                selectedAdminUser = userAccounts.find(u => u.username === usernameToSelect);
+                
+                if (selectedAdminUser) {
+                    newAdminUsernameInput.value = selectedAdminUser.username;
+                    newAdminPasswordInput.value = selectedAdminUser.password; // Pre-fill password (be aware of security for real apps)
+                }
+            }
+        });
+
 
         // --- Initial setup on page load ---
         function initializeDashboard() {
@@ -1261,7 +1545,6 @@
                     updateActiveCallsCount(); 
                     updateActiveBolosCount(); 
                     clearEventDetailsPanel(); 
-                    startCountdown(); // Start the 7-day countdown
 
                     // Hide loading overlay after data is loaded and rendered
                     loadingOverlay.classList.add('hidden');
