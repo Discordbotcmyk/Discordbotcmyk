@@ -20,6 +20,11 @@
             position: relative; /* Needed for absolute positioning of top-corner elements and loading overlay */
         }
 
+        /* Initial display state: Dashboard elements hidden by default */
+        .dashboard-container, .top-left-logo, .top-right-info {
+            display: none;
+        }
+
         /* Top-Corner Elements */
         .top-left-logo {
             position: absolute;
@@ -448,6 +453,68 @@
     </style>
 </head>
 <body>
+    <div id="loginContainer" style="
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #1a1a2e; /* Match body background */
+        color: #e0e0e0;
+        display: flex; /* Hidden by JS initially */
+        justify-content: center;
+        align-items: center;
+        z-index: 2001; /* Higher than loading overlay */
+    ">
+        <div class="login-box" style="
+            background-color: #20203a;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            width: 350px;
+        ">
+            <h2 style="color: #ffcc00; margin-bottom: 25px;">CAD System Login</h2>
+            <div class="form-group" style="margin-bottom: 20px; text-align: left;">
+                <label for="usernameInput" style="display: block; margin-bottom: 8px; font-size: 0.9em; color: #90a0c0;">USERNAME</label>
+                <input type="text" id="usernameInput" placeholder="Enter username" style="
+                    width: calc(100% - 20px);
+                    padding: 12px 10px;
+                    background-color: #303050;
+                    border: 1px solid #404060;
+                    border-radius: 4px;
+                    color: #e0e0e0;
+                    font-size: 1em;
+                ">
+            </div>
+            <div class="form-group" style="margin-bottom: 25px; text-align: left;">
+                <label for="passwordInput" style="display: block; margin-bottom: 8px; font-size: 0.9em; color: #90a0c0;">PASSWORD</label>
+                <input type="password" id="passwordInput" placeholder="Enter password" style="
+                    width: calc(100% - 20px);
+                    padding: 12px 10px;
+                    background-color: #303050;
+                    border: 1px solid #404060;
+                    border-radius: 4px;
+                    color: #e0e0e0;
+                    font-size: 1em;
+                ">
+            </div>
+            <button id="loginButton" style="
+                width: 100%;
+                padding: 12px 20px;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 1.1em;
+                font-weight: 500;
+                transition: background-color 0.2s ease;
+            ">LOGIN</button>
+            <div id="loginMessage" style="color: #e35d6a; margin-top: 15px; font-size: 0.9em;"></div>
+        </div>
+    </div>
+
     <div id="loadingOverlay">
         Loading Data...
     </div>
@@ -591,7 +658,7 @@
                     </div>
                     <div class="form-buttons">
                         <button class="btn-primary" id="clearAllButton">CLEAR ALL LOGS</button>
-                    </div>
+                        <button class="btn-secondary" id="logoutButton">LOGOUT</button> </div>
                 </div>
             </div>
 
@@ -643,13 +710,27 @@
 
     <script>
         // --- Data Structures (for single-user persistence via localStorage) ---
-        // For true multi-user live logging, these would be managed by a backend server
-        // that communicates with all connected clients via WebSockets.
         let activeCallsData = [];
         let activeUnitsData = [];
         let activeBolosData = [];
 
         // --- Get references to HTML elements ---
+
+        // Login System Elements
+        const loginContainer = document.getElementById('loginContainer');
+        const usernameInput = document.getElementById('usernameInput');
+        const passwordInput = document.getElementById('passwordInput');
+        const loginButton = document.getElementById('loginButton');
+        const loginMessage = document.getElementById('loginMessage');
+
+        // Dashboard Elements to toggle visibility
+        const dashboardContainer = document.querySelector('.dashboard-container');
+        const topLeftLogo = document.querySelector('.top-left-logo');
+        const topRightInfo = document.querySelector('.top-right-info');
+
+        // Hardcoded credentials (INSECURE FOR PRODUCTION!)
+        const VALID_USERNAME = 'admin';
+        const VALID_PASSWORD = 'password123'; // CHANGE THIS PASSWORD!
 
         // Active Calls Table
         const activeCallsTableBody = document.getElementById('activeCallsTableBody');
@@ -705,6 +786,7 @@
 
         // System Controls
         const clearAllButton = document.getElementById('clearAllButton');
+        const logoutButton = document.getElementById('logoutButton'); // Reference for the new logout button
 
         // Loading Overlay
         const loadingOverlay = document.getElementById('loadingOverlay');
@@ -1054,11 +1136,11 @@
         // --- Clear All Logs Functionality ---
         clearAllButton.addEventListener('click', () => {
             if (confirm('Are you sure you want to clear all active calls, units, and BOLOs? This action cannot be undone.')) {
-                clearAllLogs();
+                clearAllLogs(true); // Pass true to also clear login status if desired, or false to remain logged in
             }
         });
 
-        function clearAllLogs() {
+        function clearAllLogs(shouldClearLogin = false) { // Added parameter
             // Clear data arrays
             activeCallsData = [];
             activeUnitsData = [];
@@ -1073,8 +1155,12 @@
             callCounter = 0;
             boloCounter = 0;
 
-            // Clear localStorage
+            // Clear localStorage, but conditionally keep 'isLoggedIn'
+            const isLoggedInStatus = localStorage.getItem('isLoggedIn');
             localStorage.clear();
+            if (!shouldClearLogin && isLoggedInStatus) { // If we shouldn't clear login, restore it
+                localStorage.setItem('isLoggedIn', isLoggedInStatus);
+            }
 
             // Update display counts
             updateActiveCallsCount();
@@ -1098,22 +1184,92 @@
         }
 
 
+        // --- Login/Logout Functions ---
+
+        function showLogin() {
+            loginContainer.style.display = 'flex';
+            dashboardContainer.style.display = 'none';
+            topLeftLogo.style.display = 'none';
+            topRightInfo.style.display = 'none';
+            loadingOverlay.classList.add('hidden'); // Ensure loading overlay is hidden for login
+            usernameInput.focus();
+        }
+
+        function showDashboard() {
+            loginContainer.style.display = 'none';
+            dashboardContainer.style.display = 'flex'; // Restore original display property
+            topLeftLogo.style.display = 'block'; // Restore original display property
+            topRightInfo.style.display = 'flex'; // Restore original display property
+            // We'll manage loadingOverlay in initializeDashboard
+        }
+
+        function performLogin() {
+            const enteredUsername = usernameInput.value;
+            const enteredPassword = passwordInput.value;
+
+            if (enteredUsername === VALID_USERNAME && enteredPassword === VALID_PASSWORD) {
+                localStorage.setItem('isLoggedIn', 'true'); // Set a flag in local storage
+                loginMessage.textContent = '';
+                usernameInput.value = '';
+                passwordInput.value = '';
+                initializeDashboard(); // Load data and show dashboard
+            } else {
+                loginMessage.textContent = 'Invalid username or password.';
+            }
+        }
+
+        function performLogout() {
+            if (confirm('Are you sure you want to log out?')) {
+                localStorage.removeItem('isLoggedIn'); // Clear the login flag
+                clearAllLogs(true); // Clear all data and also the login status
+                showLogin(); // Go back to the login screen
+                console.log('User logged out.');
+            }
+        }
+
+        // --- Event Listeners for Login/Logout ---
+        loginButton.addEventListener('click', performLogin);
+
+        usernameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                passwordInput.focus();
+            }
+        });
+
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performLogin();
+            }
+        });
+
+        // Add this check in case the button wasn't added in HTML (though it should be now)
+        if (logoutButton) {
+            logoutButton.addEventListener('click', performLogout);
+        }
+
+
         // --- Initial setup on page load ---
         function initializeDashboard() {
-            // Show loading overlay
-            loadingOverlay.classList.remove('hidden');
+            if (localStorage.getItem('isLoggedIn') === 'true') {
+                // Show loading overlay only if we're actually loading the dashboard
+                loadingOverlay.classList.remove('hidden');
+                showDashboard(); // Make dashboard visible
 
-            // Simulate loading time (e.g., fetching from a server or just processing local data)
-            setTimeout(() => {
-                loadAllData(); // Load data from localStorage
-                updateActiveCallsCount(); 
-                updateActiveBolosCount(); 
-                clearEventDetailsPanel(); 
-                startCountdown(); // Start the 7-day countdown
+                // Simulate loading time (e.g., fetching from a server or just processing local data)
+                setTimeout(() => {
+                    loadAllData(); // Load data from localStorage
+                    updateActiveCallsCount(); 
+                    updateActiveBolosCount(); 
+                    clearEventDetailsPanel(); 
+                    startCountdown(); // Start the 7-day countdown
 
-                // Hide loading overlay after data is loaded and rendered
-                loadingOverlay.classList.add('hidden');
-            }, 1000); // Hide after 1 second (adjust as needed)
+                    // Hide loading overlay after data is loaded and rendered
+                    loadingOverlay.classList.add('hidden');
+                }, 1000); // Hide after 1 second (adjust as needed)
+            } else {
+                // If not logged in, show the login screen
+                showLogin();
+            }
         }
 
         // Call initialization function on page load
