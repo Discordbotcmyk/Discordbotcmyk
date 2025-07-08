@@ -63,10 +63,26 @@
     </div>
 
     <script>
-        // Set the countdown duration in milliseconds (48 hours)
-        const countdownDuration = 48 * 60 * 60 * 1000; // 48 hours * 60 minutes * 60 seconds * 1000 milliseconds
-        const startTime = Date.now();
-        const endTime = startTime + countdownDuration;
+        const COUNTDOWN_KEY = 'maintenanceEndTime';
+        const DURATION_HOURS = 48; // Total duration in hours
+
+        let endTime;
+
+        // Check if an end time is already stored in localStorage
+        const storedEndTime = localStorage.getItem(COUNTDOWN_KEY);
+
+        if (storedEndTime) {
+            endTime = parseInt(storedEndTime, 10);
+            // If the stored time is in the past, reset it
+            if (endTime < Date.now()) {
+                endTime = Date.now() + (DURATION_HOURS * 60 * 60 * 1000);
+                localStorage.setItem(COUNTDOWN_KEY, endTime);
+            }
+        } else {
+            // No end time stored, set it for the first time
+            endTime = Date.now() + (DURATION_HOURS * 60 * 60 * 1000);
+            localStorage.setItem(COUNTDOWN_KEY, endTime);
+        }
 
         function updateCountdown() {
             const now = Date.now();
@@ -75,7 +91,10 @@
             if (timeLeft <= 0) {
                 document.getElementById('countdown').innerHTML = "00:00:00";
                 clearInterval(countdownInterval);
-                // Optionally, redirect or show a "We're back!" message
+                localStorage.removeItem(COUNTDOWN_KEY); // Clear the stored time when countdown finishes
+                // Optionally, here you could:
+                // - Redirect to the live site: window.location.href = '/';
+                // - Display a "We're back!" message
                 return;
             }
 
